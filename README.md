@@ -1,29 +1,8 @@
-# Othello Server
+# Othello
 
-Create a game server that can accept REST API calls to perform actions for the players.  The server will send a webhook to signal when it is the next players turn.  The goal is to allow containers to be setup to test the AI capabilities and record the game history and scores.  From the past games statistics and charts can be examined to determine the best approaches.
+A game that can be used to learn about AI and ML.
 
-More Details to follow
-
-# REST API Endpoints
-
-* `/api/v1/games`
-
-   * `GET` - To retrieve the list of games.
-   
-   * `POST` - Create a new game.  The body is `Content-Type: application/json` and must be in the form of:
-   
-   ```
-   {
-       "player1": {
-         "ip": "192.168.0.2",
-         "port": 3000
-       },
-       "player2": {
-         "ip": "192.168.0.3",
-         "port": 3000
-       }
-     }
-   ```
+* The server component will be nodejs project that can allow for moves from different opponents via a REST API.
 
 ## License
 
