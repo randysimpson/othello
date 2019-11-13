@@ -25,6 +25,21 @@ More Details to follow
      }
    ```
 
+* `/api/v1/games/{id}`
+
+    * `PUT` - To update a move.  The body is `Content-Type: application/json` and must be in the form of:
+    
+    ```
+    {
+      "player": {
+        "ip": "192.168.0.2",
+        "port": 3000,
+        "color": "X"
+      },
+      "location": [0,3]
+    }
+    ```
+
 ## License
 
 MIT License

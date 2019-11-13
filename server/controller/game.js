@@ -31,35 +31,51 @@ const game = {
       creationDate: new Date(),
       player1,
       player2,
-      status: "Initializing",
+      status: "Waiting for Player 1",
       statusDate: new Date(),
-      state: [[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' ']],
+      state : [[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ','X','O',' ',' ',' '],[' ',' ',' ','O','X',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' ']],
       history: []
     };
     game.history.push(newGame);
     return newGame;
   },
-  run: (id) => {
-    let focus = game.history.filter((item) => item.id === id);
-    if(focus.length === 1) {
-      focus = focus[0];
-      focus.status = "Waiting for Player 1";
-      focus.statusDate = new Date();
-      focus.state = [[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ','X','O',' ',' ',' '],[' ',' ',' ','O','X',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' '],[' ',' ',' ',' ',' ',' ',' ',' ']];
-      //put state into history.
-      focus.history.push(focus.state.map(a => ({...a})));
-    }
-  },
-  update: (id, location) => {
-    //get the new location from player1.
-    const location = [3, 2];
-    //update board.
-    focus.state[location[0]][location[1]] = 'X';
-    //put state into history, and update status.
-    focus.history.push(focus.state.map(a => ({...a})));
-    focus.status = "Waiting for Player 2";
-    focus.statusDate = new Date();
+  update: (id, player, location) => {
+    return new Promise((resolve, reject) => {
+      let focus = game.history.filter((item) => item.id === parseInt(id));
+      if(focus.length === 1) {
+        focus = focus[0];
+        //get the player making the move.
+        //validate the move.
+        const isValid = validMove(focus.state, player, location);
+        if(isValid) {
+          //put state into history, and update status.
+          focus.history.push(focus.state.map(a => ({...a})));
+          //get the new location from player1 and update board..
+          focus.state[location[0]][location[1]] = player.color;
+          focus.status = "Waiting for Player " + ((player.color === 'X') ? '2' : '1');
+          focus.statusDate = new Date();
+          resolve({
+            status: true,
+            game: focus
+          });
+        } else {
+          reject({
+            status: false,
+            message: "Invalid move"
+          });
+        }
+      } else {
+        reject({
+          status: false,
+          message: "Invalid game."
+        });
+      }
+    });
   }
+};
+
+const validMove = (state, player, location) => {
+  return true;
 };
 
 module.exports = game;

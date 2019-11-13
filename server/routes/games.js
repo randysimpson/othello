@@ -31,18 +31,33 @@ router.get('/', (req, res) => {
 });
 
 // PUT
-router.put("/", (req, res) => {
-  game.run(0);
-  res.json({
-    status: "begin"
-  });
+router.put("/:id", (req, res) => {
+  if(req.params.id) {
+    game.update(req.params.id, req.body.player, req.body.location)
+      .then((result) => {
+        res.json({
+          status: 'updated',
+          game: result.game
+        });
+      }, (err) => {
+        res.status(500).json({
+          status: err.message
+        })
+      });
+  } else {
+    res.status(404).json({
+      status: "error no id specified."
+    });
+  }
 });
 
 // POST
 router.post('/', (req, res) => {
   //create a new game.
   const p1 = req.body.player1;
+  p1.color = "X";
   const p2 = req.body.player2;
+  p2.color = "O";
   //need to implement check for correct details on p1 and p2
   const info = game.create(p1, p2);
   res.json(info);
