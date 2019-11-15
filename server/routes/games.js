@@ -24,6 +24,46 @@ const express = require('express');
 const router = express.Router();
 const game = require('../controller/game');
 
+const http = require('http');
+
+const postWebHook = (host, port, path, method, body) => {
+  return new Promise(function(resolve, reject) {
+    const post_data = JSON.stringify(body);
+    let received_data = "";
+    // An object of options to indicate where to post to
+    const post_options = {
+        host: host,
+        port: port,
+        path: path,
+        method: method,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(post_data)
+        }
+    };
+
+    // Set up the request
+    const post_req = http.request(post_options, function(res) {
+      res.setEncoding('latin1');
+      res.on('data', function (data) {
+          received_data += data;
+      });
+      res.on('end', function() {
+          resolve(JSON.parse(received_data));
+      });
+    });
+
+    post_req.on('error', function(e) {
+        reject(e);
+    });
+
+    // post the data
+    post_req.write(post_data);
+    post_req.end();
+  });
+}
+
 // GET
 router.get('/', (req, res) => {
   //return the games
@@ -33,7 +73,7 @@ router.get('/', (req, res) => {
 // PUT
 router.put("/:id", (req, res) => {
   if(req.params.id) {
-    game.update(req.params.id, req.body.player, req.body.location)
+    updateGame(req.params.id, req.body.player, req.body.location)
       .then((result) => {
         res.json({
           status: 'updated',
@@ -42,7 +82,8 @@ router.put("/:id", (req, res) => {
       }, (err) => {
         res.status(500).json({
           status: err.message
-        })
+        });
+        console.log(err);
       });
   } else {
     res.status(404).json({
@@ -50,6 +91,32 @@ router.put("/:id", (req, res) => {
     });
   }
 });
+
+const updateGame = (id, player, location) => {
+  return new Promise((resolve, reject) => {
+    game.update(id, player, location)
+      .then((result) => {
+        if(!result.game.status.complete && result.game.status.player.ip && result.game.status.player.port) {
+          //send webhook
+          postWebHook(result.game.status.player.ip, result.game.status.player.port, '/api/v1/ai', 'POST', result.game)
+          .then((result) => {
+            if(result.player && result.location) {
+              updateGame(id, result.player, result.location)
+                .then((result2) => {
+                  resolve(result2);
+                }, (err) => console.error(err));
+            }
+          }, (err) => console.error({
+            date: new Date(),
+            err
+          }));
+        } else {
+          //wait for next action.
+          resolve(result);
+        }
+      }, (err) => reject(err));
+  })
+}
 
 // POST
 router.post('/', (req, res) => {
@@ -59,8 +126,31 @@ router.post('/', (req, res) => {
   const p2 = req.body.player2;
   p2.color = "O";
   //need to implement check for correct details on p1 and p2
-  const info = game.create(p1, p2);
-  res.json(info);
+  game.create(p1, p2)
+    .then((info) => {
+      //check if a webhook is setup.
+      if(info.status.player.ip && info.status.player.port) {
+        postWebHook(info.status.player.ip, info.status.player.port, '/api/v1/ai', 'POST', info)
+        .then((result) => {
+          if(result.player && result.location) {
+            updateGame(info.id, result.player, result.location)
+              .then((result2) => {
+                res.json(result2);
+              }, (err) => console.error(err));
+          }
+        }, (err) => console.error({
+          date: new Date(),
+          err
+        }));
+      } else {
+        res.json(info);
+      }
+    }, (err) => {
+      res.status(500).json({
+        status: err.message
+      });
+      console.log(err);
+    });
 });
 
 module.exports = router

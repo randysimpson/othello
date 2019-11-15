@@ -1,8 +1,8 @@
-# Othello Server
+# Othello Random Client
 
-*NodeJS*
+*GoLang*
 
-Create a game server that can accept REST API calls to perform actions for the players.  The server will send a webhook to signal when it is the next players turn.  The goal is to allow containers to be setup to test the AI capabilities and record the game history and scores.  From the past games statistics and charts can be examined to determine the best approaches.
+This AI client will just choose a random option from the list of available options on a game state received from the body of the REST API endpoint.  This app was created to just introduce a random opponent that has no AI built in.
 
 # Installation
 
@@ -14,22 +14,23 @@ To install the server download the repo from github:
 git clone https://github.com/randysimpson/othello.git
 ```
 
-Navigate to the folder where this server is located:
+Move the source files into go/src folder.
 
 ```
-cd othello/server
+cd othello
+mv -rf random /go/src/
 ```
 
-Issue npm install to install dependencies:
+Build the executable:
 
 ```
-npm install
+go build
 ```
 
-Run the server, and you should see output of `API ruuning on port 8080!`:
+Run the server, and the port exposed is `10000`:
 
 ```
-npm start
+./random
 ```
 
 ## Docker
@@ -38,34 +39,17 @@ To be continued...
 
 # REST API Endpoints
 
-* `/api/v1/games`
+* `/api/v1/ai`
 
-   * `GET` - To retrieve the list of games.
-   
-   * `POST` - Create a new game.  The body is `Content-Type: application/json`.  If the play is to be automated using AI then the ip and the port must be specified, otherwise the play can be used by a human if the player consists of name.  An example of a human and a computer player looks like:
-   
-   ```
-   {
-       "player1": {
-         "name": "rsimpson"
-       },
-       "player2": {
-         "ip": "192.168.0.3",
-         "port": 3000
-       }
-     }
-   ```
-   
-   The computer AI will use a webhook after each move to POST the game state and options if the ip and port are supplied.  If the webhook retuns a json object in the form of the required `/api/v1/games/{id}` PUT endpoint then the change will be applied to the game state.
-   
-   Successful response will return json with the following format:
+   * `POST` - Used to evaluate the logic of a game state and return a random available option.  The expected body is `Content-Type: application/json` with the following syntax:
    
    ```
    {
         "id": 3,
         "creationDate": "2019-11-14T23:25:11.137Z",
         "player1": {
-            "name": "rsimpson",
+            "ip": "localhost",
+            "port": 10000,
             "color": "X"
         },
         "player2": {
@@ -77,7 +61,8 @@ To be continued...
             "message": "Waiting for Player X",
             "date": "2019-11-14T23:25:11.658Z",
             "player": {
-                "name": "rsimpson",
+                "ip": "localhost",
+                "port": 10000,
                 "color": "X"
             },
             "score": {
@@ -103,21 +88,20 @@ To be continued...
         ],
         "history": []
   }
-  ```
-
-* `/api/v1/games/{id}`
-
-    * `PUT` - To update a move.  The body is `Content-Type: application/json` and must be in the form of:
-    
-    ```
-    {
-      "player": {
-        "name": "rsimpson",
-        "color": "X"
-      },
-      "location": [2,4]
-    }
-    ```
+   ```
+   
+   Response body if successful will have the following syntax:
+   
+   ```
+   {
+     "player": {
+       "ip": "localhost",
+       "port": 10000,
+       "color": "X"
+     },
+     "location": [2,4]
+   }
+   ```
 
 ## License
 

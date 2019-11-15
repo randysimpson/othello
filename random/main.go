@@ -1,14 +1,4 @@
-# Othello
-
-A game that can be used to learn about AI and ML.
-
-* The [Server](https://github.com/randysimpson/othello/tree/master/server) component is written in NodeJS, and it's job is to handle game states, issue webhooks for notification of play, validate moves/changes in state, and to handle history via a REST API.
-
-* [Random AI Client](https://github.com/randysimpson/othello/tree/master/random) component is written in GoLang, and it's job is to choose at random a location to be modified during gameplay from the available actions list received from the server webhook.
-
-## License
-
-MIT License
+/*MIT License
 
 Copyright (©) 2019 - Randall Simpson
 
@@ -28,4 +18,25 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+SOFTWARE.*/
+package main
+
+import (
+  "os"
+  "random/api"
+  "log"
+)
+
+func setupLogging() {
+  out, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+  if err != nil {
+    return 
+  }
+  log.SetOutput(out)
+}
+
+func main() {
+  setupLogging()
+  
+  api.HandleRequests()
+}
