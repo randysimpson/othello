@@ -35,7 +35,17 @@ Run the server, and the port exposed is `10000`:
 
 ## Docker
 
-To be continued...
+To run this from docker issue:
+
+```sh
+docker run -d -p 10000:10000 randysimpson/othello:1.0-random-latest
+```
+
+To test the server:
+
+```sh
+curl -d '{"id":2,"creationDate":"2019-11-15T23:02:51.857Z","player1":{"name":"rsimpson","color":"X"},"player2":{"ip":"othello-random-ai","port":10000,"color":"O"},"status":{"message":"Waiting for Player 1","date":"2019-11-15T23:02:51.857Z","player":{"name":"rsimpson","color":"X"},"score":{"player1":2,"player2":2},"availableActions":[[3,5],[5,3],[4,2],[2,4]]},"state":[[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," ","X","O"," "," "," "],[" "," "," ","O","X"," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "]],"history":[]}'-H "Content-Type: application/json" -X POST http://localhost:10000/api/v1/ai
+```
 
 # REST API Endpoints
 

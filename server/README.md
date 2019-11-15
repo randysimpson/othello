@@ -10,31 +10,41 @@ Create a game server that can accept REST API calls to perform actions for the p
 
 To install the server download the repo from github:
 
-```
+```sh
 git clone https://github.com/randysimpson/othello.git
 ```
 
 Navigate to the folder where this server is located:
 
-```
+```sh
 cd othello/server
 ```
 
 Issue npm install to install dependencies:
 
-```
+```sh
 npm install
 ```
 
 Run the server, and you should see output of `API ruuning on port 8080!`:
 
-```
+```sh
 npm start
 ```
 
 ## Docker
 
-To be continued...
+To run this from docker issue:
+
+```sh
+docker run -d -p 8080:8080 randysimpson/othello:1.0-server-latest
+```
+
+To test the server:
+
+```sh
+curl -H "Content-Type: application/json" -X GET http://localhost:8080/api/v1/games
+```
 
 # REST API Endpoints
 
@@ -44,7 +54,7 @@ To be continued...
    
    * `POST` - Create a new game.  The body is `Content-Type: application/json`.  If the play is to be automated using AI then the ip and the port must be specified, otherwise the play can be used by a human if the player consists of name.  An example of a human and a computer player looks like:
    
-   ```
+   ```json
    {
        "player1": {
          "name": "rsimpson"
@@ -60,7 +70,7 @@ To be continued...
    
    Successful response will return json with the following format:
    
-   ```
+   ```json
    {
         "id": 3,
         "creationDate": "2019-11-14T23:25:11.137Z",
@@ -109,7 +119,7 @@ To be continued...
 
     * `PUT` - To update a move.  The body is `Content-Type: application/json` and must be in the form of:
     
-    ```
+    ```json
     {
       "player": {
         "name": "rsimpson",
