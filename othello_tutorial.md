@@ -89,6 +89,90 @@ console.log("Here");
 
 6. To run application issue `npm start`.
 
+## Create UI
+
+1. Issue create-react-app command:
+
+```
+C:\Users\rsimpson\Documents\github\othello>npx create-react-app othello-ui
+npx: installed 1 in 3.919s
+Path must be a string. Received undefined
+npx: installed 91 in 16.356s
+C:\Users\rsimpson\AppData\Roaming\npm-cache\_npx\11500\node_modules\create-react-app\index.js
+
+Creating a new React app in C:\Users\rsimpson\Documents\github\othello\othello-ui.
+
+Installing packages. This might take a couple of minutes.
+Installing react, react-dom, and react-scripts...
+
+
+> core-js@2.6.10 postinstall C:\Users\rsimpson\Documents\github\othello\othello-ui\node_modules\babel-runtime\node_modules\core-js
+> node postinstall || echo "ignore"
+
+
+> core-js@3.2.1 postinstall C:\Users\rsimpson\Documents\github\othello\othello-ui\node_modules\core-js
+> node scripts/postinstall || echo "ignore"
+
++ react-dom@16.12.0
++ react@16.12.0
++ react-scripts@3.2.0
+added 1476 packages in 133.045s
+
+Success! Created othello-ui at C:\Users\rsimpson\Documents\github\othello\othello-ui
+Inside that directory, you can run several commands:
+
+  npm start
+    Starts the development server.
+
+  npm run build
+    Bundles the app into static files for production.
+
+  npm test
+    Starts the test runner.
+
+  npm run eject
+    Removes this tool and copies build dependencies, configuration files
+    and scripts into the app directory. If you do this, you can’t go back!
+
+We suggest that you begin by typing:
+
+  cd othello-ui
+  npm start
+
+Happy hacking!
+```
+
+2. Add css:
+
+```
+npm install @clr/ui --save
+```
+
+```
+npm install @clr/icons --save
+```
+
+```
+npm install @webcomponents/custom-elements --save
+```
+
+3. Add to index.js:
+
+```
+import '@clr/ui/clr-ui.min.css';
+import '@clr/icons/clr-icons.min.css';
+import '@webcomponents/custom-elements/custom-elements.min.js';
+import '@clr/icons/clr-icons.min.js';
+```
+
+4. Install redux
+
+```
+npm install redux redux-thunk react-redux --save
+```
+
+
+
 
 ## License
 

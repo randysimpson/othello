@@ -70,6 +70,15 @@ router.get('/', (req, res) => {
   res.json(game.list());
 });
 
+// GET specific game
+router.get('/:id', (req, res) => {
+  if(req.params.id) {
+    res.json(game.get(parseInt(req.params.id)));
+  } else {
+    res.status(400).json("invalid request");
+  }
+});
+
 // PUT
 router.put("/:id", (req, res) => {
   if(req.params.id) {

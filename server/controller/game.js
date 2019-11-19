@@ -52,6 +52,14 @@ const game = {
         }, (err) => reject(err));
     });
   },
+  get: (id) => {
+    const focus = game.history.filter((item) => item.id === id);
+    if(focus.length === 1) {
+      return focus[0]
+    } else {
+      return {};
+    }
+  },
   update: (id, player, location) => {
     return new Promise((resolve, reject) => {
       let focus = game.history.filter((item) => item.id === parseInt(id));
