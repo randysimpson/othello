@@ -4,13 +4,17 @@ import { connect } from 'react-redux';
 import LoadingBusy from './components/LoadingBusy';
 import GameList from './components/GameList';
 import AlertAppLevel from './components/clarity/AlertAppLevel';
+import SubNav from './components/clarity/SubNav';
 
 class App extends React.Component {
   render() {
     const { loading, appLevelAlert } = this.props;
     return (
       <div className="main-container">
-        {appLevelAlert && <AlertAppLevel />}
+        {appLevelAlert.level && 
+          <AlertAppLevel
+            level={appLevelAlert.level}
+            message={appLevelAlert.message} />}
           <header className="header header-6">
             <div className="branding">
                 <span className="title">Othello Project</span>
@@ -20,17 +24,11 @@ class App extends React.Component {
                 <a href="javascript://" className="nav-link nav-text">Info</a>
             </div>
           </header>
-          <nav className="subnav">
-              ...
-          </nav>
           <div className="content-container">
               <div className="content-area">
                 {loading && <LoadingBusy />}
                 <GameList />
               </div>
-              <nav className="sidenav">
-                  ...
-              </nav>
           </div>
       </div>
     );

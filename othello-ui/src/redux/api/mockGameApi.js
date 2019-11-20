@@ -12,6 +12,7 @@ class GameApi {
         resolve(Object.assign([], games));
         resolve(Object.assign([], games.map((game) => {
           game.creationDate = new Date(game.creationDate);
+          game.status.date = new Date(game.status.date);
           game.retrieveDate = new Date();
           return game;
         })));
