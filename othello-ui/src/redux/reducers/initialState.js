@@ -1,4 +1,5 @@
 export default {
   games: [],
-  ajaxCallsInProgress: 0
+  ajaxCallsInProgress: 0,
+  appLevelAlert: {}
 };

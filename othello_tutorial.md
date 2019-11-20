@@ -1,3 +1,5 @@
+# Create
+
 1. Create Folder
 2. Initialize npm project using `npm init` command:
 
@@ -67,7 +69,7 @@ Is this ok? (yes)
   "start": "node app.js"
 },
 ```
-   
+
 
 4. Install dependencies, `npm install express body-parser --save`:
 
@@ -171,8 +173,56 @@ import '@clr/icons/clr-icons.min.js';
 npm install redux redux-thunk react-redux --save
 ```
 
+# Build
 
+1. To build docker image on linux amd64 issue:
 
+```
+docker build -t randysimpson/othello:1.0-server-amd64 .
+```
+
+2. Push it to docker hub.
+
+```
+docker push randysimpson/othello:1.0-server-amd64
+```
+
+3. Build on Raspberry Pi arm arch:
+
+```
+docker build -t randysimpson/othello:1.0-server-arm .
+```
+
+4. Push to docker
+
+```
+docker push randysimpson/othello:1.0-server-arm
+```
+
+5. If docker is not ready for experimental features:
+
+```
+To enable the manifest feature, the experimental CLI options needs to be set in the config file in .docker home folder. Here’s how your config.json file should look like
+{
+   "experimental": "enabled",
+   "credsStore": "wincred",
+   "auths": {
+       "https://index.docker.io/v1/": {}
+    }
+}
+```
+
+6. Create `latest` edition that will be available for download from hub.docker:
+
+```
+docker manifest create randysimpson:othello:1.0-server-latest randysimpson/othello:1.0-server-arm randysimpson/othello:1.0-server-amd64
+```
+
+7. Push to hub.docker:
+
+```
+docker manifest push randysimpson:othello:1.0-server-latest
+```
 
 ## License
 

@@ -3,15 +3,14 @@ import { connect } from 'react-redux';
 
 import LoadingBusy from './components/LoadingBusy';
 import GameList from './components/GameList';
+import AlertAppLevel from './components/clarity/AlertAppLevel';
 
 class App extends React.Component {
   render() {
-    const { loading } = this.props;
+    const { loading, appLevelAlert } = this.props;
     return (
       <div className="main-container">
-          <div className="alert alert-app-level">
-              ...
-          </div>
+        {appLevelAlert && <AlertAppLevel />}
           <header className="header header-6">
             <div className="branding">
                 <span className="title">Othello Project</span>
@@ -44,7 +43,8 @@ function NoMatch() {
 
 function mapStateToProps(state, ownProps) {
   return {
-    loading: state.ajaxCallsInProgress > 0
+    loading: state.ajaxCallsInProgress > 0,
+    appLevelAlert: state.appLevelAlert
   };
 }
 

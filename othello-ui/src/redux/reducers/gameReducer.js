@@ -8,9 +8,8 @@ export default function(state = initialState.games, action) {
     case LOAD_GAME_DETAILS_SUCCESS:
       let oldValue = state.filter(game => game.id === action.id);
       if(oldValue.length === 1) {
-        oldValue = Object.assign({}, oldValue[0]);
-        oldValue.details = action.game;
-        oldValue.details.retrieveDate = new Date();
+        oldValue = Object.assign({}, action.game);
+        oldValue.retrieveDate = new Date();
         const newArry = [...state.filter(game => game.id !== action.id),
           oldValue
         ];
