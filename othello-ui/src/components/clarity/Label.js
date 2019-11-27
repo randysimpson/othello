@@ -4,38 +4,37 @@ import classNames from 'classnames';
 import { mapToCssModules, tagPropType } from './utils';
 
 const propTypes = {
+  children: PropTypes.node,
+  row: PropTypes.bool,
   tag: tagPropType,
   className: PropTypes.string,
   cssModule: PropTypes.object,
-  children: PropTypes.node
 };
 
 const defaultProps = {
-  tag: 'div'
+  tag: 'div',
 };
 
-const SubNav = (props) => {
+const FormControl = (props) => {
   const {
     className,
     cssModule,
-    children,
+    row,
     tag: Tag,
     ...attributes
   } = props;
 
   const classes = mapToCssModules(classNames(
     className,
-    'subnav'
+    row ? 'clr-row' : false
   ), cssModule);
 
   return (
-    <Tag {...attributes} className={classes}>
-      {children}
-    </Tag>
+    <Tag {...attributes} className={classes} />
   );
 };
 
-SubNav.propTypes = propTypes;
-SubNav.defaultProps = defaultProps;
+FormControl.propTypes = propTypes;
+FormControl.defaultProps = defaultProps;
 
-export default SubNav;
+export default FormControl;

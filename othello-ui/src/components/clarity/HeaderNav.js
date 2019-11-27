@@ -14,7 +14,7 @@ const defaultProps = {
   tag: 'div'
 };
 
-const SubNav = (props) => {
+const HeaderNav = (props) => {
   const {
     className,
     cssModule,
@@ -25,7 +25,7 @@ const SubNav = (props) => {
 
   const classes = mapToCssModules(classNames(
     className,
-    'subnav'
+    'header-nav'
   ), cssModule);
 
   return (
@@ -35,7 +35,7 @@ const SubNav = (props) => {
   );
 };
 
-SubNav.propTypes = propTypes;
-SubNav.defaultProps = defaultProps;
+HeaderNav.propTypes = propTypes;
+HeaderNav.defaultProps = defaultProps;
 
-export default SubNav;
+export default HeaderNav;

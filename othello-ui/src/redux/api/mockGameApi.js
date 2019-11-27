@@ -14,11 +14,17 @@ class GameApi {
           game.creationDate = new Date(game.creationDate);
           game.status.date = new Date(game.status.date);
           game.retrieveDate = new Date();
+          if(!game.player1.name) {
+            game.player1.name = 'Computer';
+          }
+          if(!game.player2.name) {
+            game.player2.name = 'Computer';
+          }
           return game;
         })));
       }, delay);
     });
-  }
+  };
   static getGame(id) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -27,6 +33,28 @@ class GameApi {
           resolve(Object.assign({}, focus[0]));
         } else {
           resolve({});
+        }
+      }, delay);
+    });
+  };
+  static putGameAction(id, r, c, player) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        let focus = games.filter((item) => item.id === id);
+        if(focus.length === 1) {
+          focus[0].state[r][c] = player;
+          focus[0].status.availableActions = [];
+          //focus[0].status.player =
+          focus[0].message = "Waiting.";
+          console.log({
+            r,
+            c,
+            player,
+            state: focus[0].state
+          });
+          resolve(Object.assign({}, focus[0]));
+        } else {
+          reject();
         }
       }, delay);
     });

@@ -3,3 +3,7 @@
   content: "";
   display: table;
 }
+
+.game-board {
+  margin-top: 30px;
+}

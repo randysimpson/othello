@@ -45,3 +45,17 @@ export function loadGameDetails(id) {
     });
   };
 }
+
+export function putGameAction(id, r, c, action) {
+  return function(dispatch) {
+    dispatch(beginAjaxCall());
+
+    return gameApi.putGameAction(id, r, c, action)
+      .then(gameDetails => {
+        dispatch(loadGameDetailsSuccess(id, gameDetails));
+      }).catch(err => {
+        dispatch(ajaxCallError());
+        throw(err);
+      });
+  }
+}

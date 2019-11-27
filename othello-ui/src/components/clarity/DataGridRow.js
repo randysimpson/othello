@@ -1,4 +1,7 @@
 import React from 'react';
+import {
+  Link
+} from "react-router-dom";
 
 const DataGridRow = (props) => {
   const { item } = props;
@@ -9,7 +12,14 @@ const DataGridRow = (props) => {
         <div class="datagrid-row-scrollable">
           <div class="datagrid-scrolling-cells">
             {item && item.columns && item.columns.map((column) => (
-              <clr-dg-cell _ngcontent-clarity-c108="" role="gridcell" class="datagrid-cell ng-star-inserted" style={{width: column.width}} key={column.id}>{column.data}</clr-dg-cell>
+              <clr-dg-cell _ngcontent-clarity-c108="" role="gridcell" class="datagrid-cell ng-star-inserted" style={{width: column.width}} key={column.id}>
+                {column.href && (
+                  <Link to={column.href}>{column.data}</Link>
+                )}
+                {!column.href && (
+                  column.data
+                )}
+              </clr-dg-cell>
             ))}
           </div>
         </div>

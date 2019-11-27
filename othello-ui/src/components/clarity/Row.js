@@ -7,35 +7,37 @@ const propTypes = {
   tag: tagPropType,
   className: PropTypes.string,
   cssModule: PropTypes.object,
-  children: PropTypes.node
+  form: PropTypes.bool,
+  disabled: PropTypes.bool
 };
 
 const defaultProps = {
   tag: 'div'
 };
 
-const SubNav = (props) => {
+const Row = (props) => {
   const {
     className,
     cssModule,
-    children,
     tag: Tag,
+    form,
+    disabled,
     ...attributes
   } = props;
 
   const classes = mapToCssModules(classNames(
     className,
-    'subnav'
+    'clr-row',
+    form ? 'clr-form-control' : false,
+    disabled ? 'clr-form-control-disabled' : false
   ), cssModule);
 
   return (
-    <Tag {...attributes} className={classes}>
-      {children}
-    </Tag>
+    <Tag {...attributes} className={classes} />
   );
 };
 
-SubNav.propTypes = propTypes;
-SubNav.defaultProps = defaultProps;
+Row.propTypes = propTypes;
+Row.defaultProps = defaultProps;
 
-export default SubNav;
+export default Row;

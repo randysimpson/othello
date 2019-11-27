@@ -1,21 +1,21 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import * as gameActions from '../redux/actions/gameActions';
 
+import * as gameActions from '../redux/actions/gameActions';
 import DataGrid from './clarity/DataGrid';
 
 class GameList extends React.Component {
   constructor(props, context) {
     super(props, context);
-    
-    this.loadGames();
-    
+
+    //this.loadGames();
+
     this.state = {
       currentPage: 1,
       numOnPage: 10
     };
-    
+
     this.firstPageClick = this.firstPageClick.bind(this);
     this.prevPageClick = this.prevPageClick.bind(this);
     this.nextPageClick = this.nextPageClick.bind(this);
@@ -23,7 +23,7 @@ class GameList extends React.Component {
     this.textPageChange = this.textPageChange.bind(this);
     this.changeNumOnPage = this.changeNumOnPage.bind(this);
   }
-  
+
   loadGames() {
     this.props.actions.loadGames()
       .then(() => {
@@ -37,13 +37,13 @@ class GameList extends React.Component {
         console.log(err);
       });
   }
-  
+
   firstPageClick() {
     this.setState({
       currentPage: 1
     });
   }
-  
+
   prevPageClick() {
     if(this.state.currentPage > 1) {
       this.setState({
@@ -51,7 +51,7 @@ class GameList extends React.Component {
       });
     }
   }
-  
+
   nextPageClick() {
     const total = this.props.games.length;
     const numOnPage = this.state.numOnPage;
@@ -62,7 +62,7 @@ class GameList extends React.Component {
       });
     }
   }
-  
+
   lastPageClick() {
     const total = this.props.games.length;
     const numOnPage = this.state.numOnPage;
@@ -70,7 +70,7 @@ class GameList extends React.Component {
       currentPage: total % numOnPage === 0 ? Math.floor(total / numOnPage) : Math.floor(total / numOnPage) + 1
     });
   }
-  
+
   textPageChange(event) {
     const val = Number(event.target.value);
     const maxPages = Math.floor(this.props.games.length / this.state.numOnPage) + 1;
@@ -80,13 +80,13 @@ class GameList extends React.Component {
       });
     }
   }
-  
+
   changeNumOnPage(event) {
     this.setState({
       numOnPage: event.target.value
     });
   }
-  
+
   render() {
     const { games, loading } = this.props;
     const { numOnPage, currentPage } = this.state;
@@ -94,7 +94,7 @@ class GameList extends React.Component {
       return (
         <div />
       );
-    } else if(games) {
+    } else if(games.length > 0) {
       console.log(games);
       //temp
       const columns = [{
@@ -126,14 +126,15 @@ class GameList extends React.Component {
         width: '25px',
         title: 'Y Score'
       }];
-      
+
       const data = games.map((game) => {
         return {
           id: game.id,
           columns: [{
             id: 1,
             width: '28px',
-            data: game.id
+            data: game.id,
+            href: "/games/" + game.id
           }, {
             id: 2,
             width: '50px',
@@ -163,6 +164,7 @@ class GameList extends React.Component {
       });
       return (
         <div>
+          <h2>Games</h2>
           <DataGrid
             columns={columns}
             data={data}
@@ -178,6 +180,7 @@ class GameList extends React.Component {
         </div>
       )
     } else {
+      this.loadGames();
       return (
         <div>
           no games.

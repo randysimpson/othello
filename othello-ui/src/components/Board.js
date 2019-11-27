@@ -1,7 +1,4 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import * as gameActions from '../redux/actions/gameActions';
 
 import Square from './Square';
 import './Board.css';
@@ -9,76 +6,53 @@ import './Board.css';
 class Board extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       error: null,
       isLoaded: false,
-      squares: Array(9).fill(null),
+      //squares: Array(9).fill(null),
+      squares: props.gameBoard,
+      enabled: props.enabled
     };
   }
-  
-  componentDidMount() {
-    /*fetch("http://10.127.128.126:30563/api/v1/games")
-      .then(res => res.json())
-      .then((result) => {
-        console.log(result);
-        this.setState({
-          isLoaded: true,
-          squares: result.items
-        })
-      },
-      (err) => {
-        this.setState({
-          isLoaded: true,
-          error: err
-        });
-      });*/
-  }
-  
-  handleClick(i) {
-    const squares = this.state.squares.slice();
-    squares[i] = 'X';
-    this.setState({squares: squares});
-  }
-  
-  renderSquare(i) {
+
+  renderSquare(r, c) {
     return (
       <Square
-        value={this.state.squares[i]}
-        onClick={() => this.handleClick(i)}
+        value={this.state.squares[r][c]}
+        onClick={() => this.props.onClick(r, c)}
       />
     );
   }
-  
+
+  renderRow(r) {
+    return (
+      <div className="board-row">
+        {this.renderSquare(r, 0)}
+        {this.renderSquare(r, 1)}
+        {this.renderSquare(r, 2)}
+        {this.renderSquare(r, 3)}
+        {this.renderSquare(r, 4)}
+        {this.renderSquare(r, 5)}
+        {this.renderSquare(r, 6)}
+        {this.renderSquare(r, 7)}
+      </div>
+    )
+  }
+
   render() {
-    const status = 'Next player: X';
-    const { error, isLoaded } = this.state;
-    
-    if (error) {
-      return <div>Error: {error.message}</div>;
-    } else if (!isLoaded) {
-      return <div>Loading...</div>;
-    } else {
-      return (
-        <div>
-          <div className="status">{status}</div>
-          <div className="board-row">
-            {this.renderSquare(0)}
-            {this.renderSquare(1)}
-            {this.renderSquare(2)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(3)}
-            {this.renderSquare(4)}
-            {this.renderSquare(5)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(6)}
-            {this.renderSquare(7)}
-            {this.renderSquare(8)}
-          </div>
-        </div>
-      );
-    }
+    return (
+      <div className="game-board">
+        {this.renderRow(0)}
+        {this.renderRow(1)}
+        {this.renderRow(2)}
+        {this.renderRow(3)}
+        {this.renderRow(4)}
+        {this.renderRow(5)}
+        {this.renderRow(6)}
+        {this.renderRow(7)}
+      </div>
+    );
   }
 }
 
