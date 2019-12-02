@@ -24,7 +24,8 @@ const express = require('express'),
   bodyParser = require('body-parser')
 
 const app = express();
-const gamesRoute = require('./routes/games');
+const gamesRoute = require('./routes/games'),
+  playersRoute = require('./routes/players');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -41,6 +42,7 @@ app.use((req, res, next) => {
 
 //define the API
 app.use('/api/v1/games', gamesRoute);
+app.use('/api/v1/players', playersRoute);
 
 app.get('/', (req, res) => res.send('TODO: Api Definition'));
 
