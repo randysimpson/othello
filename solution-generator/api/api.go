@@ -124,6 +124,14 @@ func getPeers(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(peers)
 }*/
 
+/*func getPeers(w http.ResponseWriter, r *http.Request) {
+  peers := models.GetPeers(2)
+
+  w.WriteHeader(http.StatusOK)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  json.NewEncoder(w).Encode(peers)
+}*/
+
 func HandleRequests() {
   // creates a new instance of a mux router
   myRouter := mux.NewRouter().StrictSlash(true)

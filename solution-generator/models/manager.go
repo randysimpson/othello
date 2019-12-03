@@ -23,7 +23,6 @@ package models
 
 import (
   "log"
-  //"encoding/json"
 )
 
 type Peer struct {
@@ -49,9 +48,18 @@ func GetPeers(count int) []Peer {
     log.Printf("error: %+v", err)
   }
 
-  //var peers []Peer
+  var peers []Peer
+
+  items := result.([]interface{})
+  for _, item := range items {
+    m := item.(map[string]interface{})
+    ip := m["ip"].(string)
+    count := m["count"].(float64)
+    peer := Peer{ip, int(count)}
+    peers = append(peers, peer)
+  }
+
   //json.Unmarshal(result, &peers)
-  peers, _ := result.([]Peer)
 
   return peers
 }

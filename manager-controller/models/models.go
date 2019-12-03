@@ -59,14 +59,13 @@ func GetPeers(request PeerRequest) []Peer {
   sort.Sort(ByCount(peers))
 
   var rtnList []Peer
-  for i := 0; i < request.Count; i++ {
+  for len(rtnList) < request.Count {
     for j := 0; j < len(peers); j++ {
       if peers[j].Ip != request.MyIp {
         peers[j].Count ++
         rtnList = append(rtnList, peers[j])
-        i++
       }
-      if i == request.Count {
+      if len(rtnList) == request.Count {
         break
       }
     }
