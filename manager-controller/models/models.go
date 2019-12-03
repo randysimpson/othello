@@ -46,6 +46,17 @@ type RegisterBody struct {
   Ip string `json:"ip"`
 }
 
+type Solution struct {
+  States [][][]interface{} `json:"states"`
+  Score Score `json:"score"`
+  //date
+}
+
+type Score struct {
+  X int `json:"x"`
+  O int `json:"o"`
+}
+
 type ByCount []Peer
 
 func (a ByCount) Len() int           { return len(a) }
@@ -95,11 +106,33 @@ func init() {
 }
 
 func InsertSolution(solution [][][]interface{}) string {
+  score := getScore(solution)
+  insertSolution := Solution{solution, score}
+
   ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-  res, err := collection.InsertOne(ctx, solution)
+  res, err := collection.InsertOne(ctx, insertSolution)
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
   return fmt.Sprintf("%s", res.InsertedID)
+}
+
+func getScore(solution [][][]interface{}) Score {
+  score := Score{0, 0}
+
+  lastState := solution[len(solution) - 1]
+
+  //count each item.
+  for _, row := range lastState {
+		for _, col := range row {
+      if col == "X" {
+        score.X ++
+      } else if col == "O" {
+        score.O ++
+      }
+    }
+	}
+
+  return score
 }
