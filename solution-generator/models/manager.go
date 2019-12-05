@@ -82,3 +82,12 @@ func PostSolution(solution [][][]interface{}) {
     log.Printf("error: %+v", err)
   }
 }
+
+func PostState(state string) {
+  info := GetInfo()
+
+  _, err := Post(info.ManagerHost, info.ManagerPort, "/api/v1/state", "application/json", state)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+}

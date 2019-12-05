@@ -38,99 +38,76 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
   if err != nil {
     log.Printf("error: %+v", err)
   }
-
+  
   json.Unmarshal(reqBody, &gameInfo)
+  
+  //check if this state has been visited.
+  stateString := gameInfo.GetStateString()
+  isVisted := models.GetVisitedState(stateString)
+  
+  if(!isVisted) {
+    //var results [][][][]interface{}
+    options := gameInfo.GetAvailableMoves()
+    
+    //check if there are options on the other color
+    //lastChance := false
+    if len(options) == 0 {
+      //lastChance = true
+      if gameInfo.Color == "X" {
+        gameInfo.Color = "O"
+      } else {
+        gameInfo.Color = "X"
+      }
+      options = gameInfo.GetAvailableMoves()
+    }
 
-  //var results [][][][]interface{}
-  options := gameInfo.GetAvailableMoves()
-
-  //check if there are options on the other color
-  //lastChance := false
-  if len(options) == 0 {
-    //lastChance = true
-    if gameInfo.Color == "X" {
-      gameInfo.Color = "O"
+    if len(options) == 0 {
+      //no options left, this is solution.
+      models.PostSolution(gameInfo.Statelist)
+      //results = append(results, gameInfo.Statelist)
     } else {
-      gameInfo.Color = "X"
+      //get the peers to use
+      peers := models.GetPeers(len(options))
+
+      for i := 0; i < len(options); i++ {
+        //for each option.
+        newState := gameInfo.AddMove(options[i])
+        info := models.GetInfo()
+        newState.Ip = info.Ip
+        //fmt.Printf("newState: %+v\n", newState)
+        //http this out to another container.
+        requestBody, err := json.Marshal(&newState)
+        if err != nil {
+        	log.Printf("error: %+v", err)
+        }
+
+        response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
+        if err != nil {
+        	log.Printf("error: %+v", err)
+        }
+
+        defer response.Body.Close()
+        _, err = ioutil.ReadAll(response.Body)
+        if err != nil {
+        	log.Printf("error: %+v", err)
+        }
+      }
     }
-    options = gameInfo.GetAvailableMoves()
-  }
 
-
-  if len(options) == 0 {
-    //no options left, this is solution.
-    models.PostSolution(gameInfo.Statelist)
-    //results = append(results, gameInfo.Statelist)
+    w.WriteHeader(http.StatusOK)
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    json.NewEncoder(w).Encode(options)
   } else {
-    //get the peers to use
-    peers := models.GetPeers(len(options))
-
-    for i := 0; i < len(options); i++ {
-      //for each option.
-      newState := gameInfo.AddMove(options[i])
-      info := models.GetInfo()
-      newState.Ip = info.Ip
-      //fmt.Printf("newState: %+v\n", newState)
-      //http this out to another container.
-      requestBody, err := json.Marshal(&newState)
-      if err != nil {
-      	log.Printf("error: %+v", err)
-      }
-
-      response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
-      if err != nil {
-      	log.Printf("error: %+v", err)
-      }
-
-      defer response.Body.Close()
-      _, err = ioutil.ReadAll(response.Body)
-      if err != nil {
-      	log.Printf("error: %+v", err)
-      }
-
-      //var result [][][][]interface{}
-      //json.Unmarshal(body, &result)
-
-      //for j := 0; j < len(result); j++ {
-      //  results = append(results, result[j])
-      //}
-    }
+    //this has been looked at.
+    
+    //send resposne.
+    w.WriteHeader(http.StatusOK)
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   }
-
-  w.WriteHeader(http.StatusOK)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(options)
+  
+  //send to mgr that we saw this before.
+  models.PostState(stateString)
 }
-
-/*func setPeers(w http.ResponseWriter, r *http.Request) {
-  reqBody, err := ioutil.ReadAll(r.Body)
-  if err != nil {
-    log.Printf("error: %+v", err)
-  }
-
-  peers := models.GetPeers()
-  json.Unmarshal(reqBody, &peers)
-
-  w.WriteHeader(http.StatusCreated)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(peers)
-}
-
-func getPeers(w http.ResponseWriter, r *http.Request) {
-  peers := models.GetPeers()
-
-  w.WriteHeader(http.StatusOK)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(peers)
-}*/
-
-/*func getPeers(w http.ResponseWriter, r *http.Request) {
-  peers := models.GetPeers(2)
-
-  w.WriteHeader(http.StatusOK)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(peers)
-}*/
 
 func HandleRequests() {
   // creates a new instance of a mux router

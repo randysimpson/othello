@@ -224,6 +224,181 @@ docker manifest create randysimpson:othello:1.0-server-latest randysimpson/othel
 docker manifest push randysimpson:othello:1.0-server-latest
 ```
 
+## Install Helm
+
+1. Download helm according to [Helm Install](https://helm.sh/docs/intro/install/)
+
+```
+wget https://get.helm.sh/helm-v3.0.0-linux-amd64.tar.gz
+```
+
+2. Untar the binaries.
+
+```
+tar -zxvf helm-v3.0.0-linux-amd64.tar.gz
+```
+
+3. Move it to the usr/local/bin
+
+```
+sudo mv linux-amd64/helm /usr/local/bin/helm
+```
+
+4. Install the stable repos:
+
+```
+helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+```
+
+5. Search for redis:
+
+```
+helm search repo redis
+```
+
+6. Update repo:
+
+```
+ubuntu@master-1:~$ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "stable" chart repository
+Update Complete. ⎈ Happy Helming!⎈
+```
+
+## Install Redis
+
+1. Download default values, read about them [Github helm Redis](https://github.com/helm/charts/tree/master/stable/redis):
+
+```
+wget https://raw.githubusercontent.com/helm/charts/master/stable/redis/values.yaml
+```
+
+2. I updated the `slaveCount` value to 3 and then uncommented the master.persistence.storageClass value of "-" as well as the slave.persistence.storageClass
+
+3. Create PV
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: redis-master-pv-volume
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /data
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: redis-slave-0-pv-volume
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /data
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: redis-slave-1-pv-volume
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /data
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: redis-slave-2-pv-volume
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /data
+  persistentVolumeReclaimPolicy: Retain
+```
+
+4. Install Redis:
+
+```
+ubuntu@master-1:~$ helm install othello-redis stable/redis -f values.yaml
+NAME: othello-redis
+LAST DEPLOYED: Wed Dec  4 13:38:17 2019
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+** Please be patient while the chart is being deployed **
+Redis can be accessed via port 6379 on the following DNS names from within your cluster:
+
+othello-redis-master.default.svc.cluster.local for read/write operations
+othello-redis-slave.default.svc.cluster.local for read-only operations
+
+
+To get your password run:
+
+    export REDIS_PASSWORD=$(kubectl get secret --namespace default othello-redis -o jsonpath="{.data.redis-password}" | base64 --decode)
+
+To connect to your Redis server:
+
+1. Run a Redis pod that you can use as a client:
+
+   kubectl run --namespace default othello-redis-client --rm --tty -i --restart='Never' \
+    --env REDIS_PASSWORD=$REDIS_PASSWORD \
+   --image docker.io/bitnami/redis:5.0.7-debian-9-r12 -- bash
+
+2. Connect using the Redis CLI:
+   redis-cli -h othello-redis-master -a $REDIS_PASSWORD
+   redis-cli -h othello-redis-slave -a $REDIS_PASSWORD
+
+To connect to your database from outside the cluster execute the following commands:
+
+    kubectl port-forward --namespace default svc/othello-redis-master 6379:6379 &
+    redis-cli -h 127.0.0.1 -p 6379 -a $REDIS_PASSWORD
+```
+
+# Troubleshooting
+
+When deploying redis I had issues with the containers in CrashLoopBackOff status:
+
+```
+kubectl logs othello-redis-master-0
+ 20:40:08.40 INFO  ==> ** Starting Redis **
+1:C 04 Dec 2019 20:40:08.408 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+1:C 04 Dec 2019 20:40:08.408 # Redis version=5.0.7, bits=64, commit=00000000, modified=0, pid=1, just started
+1:C 04 Dec 2019 20:40:08.408 # Configuration loaded
+1:M 04 Dec 2019 20:40:08.410 # Can't open the append-only file: Permission denied
+```
+
+I had to log into each node, create the /data folder that was used in the PV and then modify permissions using:
+
+```
+sudo mkdir /data
+sudo chown 1001:1001 /data
+```
+
 ## License
 
 MIT License

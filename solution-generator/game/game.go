@@ -380,3 +380,17 @@ func (g* Game) AddMove(move Move) Game {
   }
   return newGameInfo
 }
+
+func (g* Game) GetStateString() string {
+  lastState := g.Statelist[len(g.Statelist) - 1]
+  stateString := ""
+  
+  //count each item.
+  for _, row := range lastState {
+		for _, col := range row {
+      stateString += col
+    }
+	}
+  
+  return stateString
+}

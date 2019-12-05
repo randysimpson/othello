@@ -30,6 +30,7 @@ import (
   "go.mongodb.org/mongo-driver/mongo"
   "go.mongodb.org/mongo-driver/mongo/options"
   "fmt"
+  "strconv"
 )
 
 type Peer struct {
@@ -103,6 +104,14 @@ func init() {
   }
 
   collection = client.Database("othello").Collection("solutions")
+  
+  redisRW := os.Getenv("REDIS_RW")
+  redisPort, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  SetupPool(redisRW, redisPort)
 }
 
 func InsertSolution(solution [][][]interface{}) string {

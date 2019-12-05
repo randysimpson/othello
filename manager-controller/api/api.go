@@ -80,6 +80,23 @@ func Register(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(info)
 }
 
+func setState(w http.ResponseWriter, r *http.Request) {
+  var state interface{}
+  
+  reqBody, err := ioutil.ReadAll(r.Body)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  json.Unmarshal(reqBody, &state)
+  
+  models.AddState(state)
+  
+  w.WriteHeader(http.StatusCreated)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  json.NewEncoder(w).Encode(state)
+}
+
 func HandleRequests() {
   // creates a new instance of a mux router
   myRouter := mux.NewRouter().StrictSlash(true)
@@ -87,6 +104,7 @@ func HandleRequests() {
   myRouter.HandleFunc("/api/v1/solution", getSolution).Methods("POST")
   myRouter.HandleFunc("/api/v1/peers", getPeers).Methods("POST")
   myRouter.HandleFunc("/api/v1/register", Register).Methods("POST")
+  myRouter.HandleFunc("/api/v1/state", setState).Methods("POST")
 
   // finally, instead of passing in nil, we want
   // to pass in our newly created router as the second

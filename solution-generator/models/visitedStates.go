@@ -22,43 +22,35 @@ SOFTWARE.*/
 package models
 
 import (
-  "os"
-  "strconv"
-  "log"
+	"fmt"
+	"log"
+	"strconv"
+	"github.com/gomodule/redigo/redis"
 )
 
-type Info struct {
-  Ip string `json:"ip"`
-  ManagerHost string
-  ManagerPort int
-  RedisRO string
-  RedisPort int
+var pool *redis.Pool
+
+func SetupPool() {
+	info := GetInfo()
+	url := fmt.Sprintf("%s:%d", info.RedisRO, info.RedisPort)
+	pool = &redis.Pool{
+		MaxIdle:     10,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", url)
+		},
+	}
 }
 
-var info Info
-
-func init() {
-  info.Ip = os.Getenv("POD_IP")
-  info.ManagerHost = os.Getenv("MGR_HOST")
-  port, err := strconv.Atoi(os.Getenv("MGR_PORT"))
-  if err != nil {
+func GetVisitedState(state string) bool {
+	conn := pool.Get()
+	defer conn.Close()
+	
+	key := fmt.Sprintf("visited:%s", state)
+	visited, err := redis.Bool(conn.Do("EXISTS", key))
+	if err != nil {
     log.Printf("error: %+v", err)
   }
-
-  info.ManagerPort = port
-  info.RedisRO = os.Getenv("REDIS_RO")
-  redisPort, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
-  if err != nil {
-    log.Printf("error: %+v", err)
-  }
-  
-  info.RedisPort = redisPort
-
-  Register()
-  
-  SetupPool()
-}
-
-func GetInfo() Info {
-  return info
+	
+	return visited
 }
