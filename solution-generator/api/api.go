@@ -38,75 +38,26 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
   if err != nil {
     log.Printf("error: %+v", err)
   }
-  
+
   json.Unmarshal(reqBody, &gameInfo)
-  
+
   //check if this state has been visited.
   stateString := gameInfo.GetStateString()
   isVisted := models.GetVisitedState(stateString)
-  
+
+  //get the other states to avoid duplicate work.
+  states := gameInfo.GetStateMirrors()
+  states = append(states, stateString)
+  //send to mgr that we saw this before.
+  models.PostState(states)
+
   if(!isVisted) {
     //var results [][][][]interface{}
-    options := gameInfo.GetAvailableMoves()
-    
-    //check if there are options on the other color
-    //lastChance := false
-    if len(options) == 0 {
-      //lastChance = true
-      if gameInfo.Color == "X" {
-        gameInfo.Color = "O"
-      } else {
-        gameInfo.Color = "X"
-      }
-      options = gameInfo.GetAvailableMoves()
-    }
-
-    if len(options) == 0 {
-      //no options left, this is solution.
-      models.PostSolution(gameInfo.Statelist)
-      //results = append(results, gameInfo.Statelist)
-    } else {
-      //get the peers to use
-      peers := models.GetPeers(len(options))
-
-      for i := 0; i < len(options); i++ {
-        //for each option.
-        newState := gameInfo.AddMove(options[i])
-        info := models.GetInfo()
-        newState.Ip = info.Ip
-        //fmt.Printf("newState: %+v\n", newState)
-        //http this out to another container.
-        requestBody, err := json.Marshal(&newState)
-        if err != nil {
-        	log.Printf("error: %+v", err)
-        }
-
-        response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
-        if err != nil {
-        	log.Printf("error: %+v", err)
-        }
-
-        defer response.Body.Close()
-        _, err = ioutil.ReadAll(response.Body)
-        if err != nil {
-        	log.Printf("error: %+v", err)
-        }
-      }
-    }
-
-    w.WriteHeader(http.StatusOK)
-    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-    json.NewEncoder(w).Encode(options)
-  } else {
-    //this has been looked at.
-    
-    //send resposne.
-    w.WriteHeader(http.StatusOK)
-    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    go gameInfo.GenerateSolution()
   }
-  
-  //send to mgr that we saw this before.
-  models.PostState(stateString)
+
+  w.WriteHeader(http.StatusOK)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 }
 
 func HandleRequests() {

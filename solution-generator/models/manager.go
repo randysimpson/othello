@@ -83,7 +83,7 @@ func PostSolution(solution [][][]interface{}) {
   }
 }
 
-func PostState(state string) {
+func PostState(state []string) {
   info := GetInfo()
 
   _, err := Post(info.ManagerHost, info.ManagerPort, "/api/v1/state", "application/json", state)

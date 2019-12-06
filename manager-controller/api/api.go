@@ -81,17 +81,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func setState(w http.ResponseWriter, r *http.Request) {
-  var state interface{}
-  
+  var states []string
+
   reqBody, err := ioutil.ReadAll(r.Body)
   if err != nil {
     log.Printf("error: %+v", err)
   }
-  
-  json.Unmarshal(reqBody, &state)
-  
-  models.AddState(state)
-  
+
+  json.Unmarshal(reqBody, &states)
+
+  models.AddStates(states)
+
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   json.NewEncoder(w).Encode(state)

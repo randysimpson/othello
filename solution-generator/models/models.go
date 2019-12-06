@@ -51,11 +51,11 @@ func init() {
   if err != nil {
     log.Printf("error: %+v", err)
   }
-  
+
   info.RedisPort = redisPort
 
   Register()
-  
+
   SetupPool()
 }
 

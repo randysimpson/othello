@@ -41,10 +41,10 @@ func SetupPool(host string, port int) {
 	}
 }
 
-func AddState(state string) {
+func AddStates(states []string) {
 	conn := pool.Get()
 	defer conn.Close()
-	
+
 	key := fmt.Sprintf("visited:%s", state)
 	//if it exists increment by 1
 	_, err := conn.Do("SET", key, 1)

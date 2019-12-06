@@ -383,14 +383,142 @@ func (g* Game) AddMove(move Move) Game {
 
 func (g* Game) GetStateString() string {
   lastState := g.Statelist[len(g.Statelist) - 1]
+  return stateString(lastState)
+}
+
+func stateString(lastState [][]interface{}) string {
   stateString := ""
-  
+
   //count each item.
   for _, row := range lastState {
 		for _, col := range row {
       stateString += col
     }
 	}
-  
+
   return stateString
+}
+
+func reverseString(oldState [][]interface{}) string {
+  stateString := ""
+
+  //count each item.
+  for _, row := range oldState {
+		for _, col := range row {
+      stateString = col + stateString
+    }
+	}
+
+  return stateString
+}
+
+// Function to rotate the matrix
+// 90 degree clockwise
+func rotate90Clockwise(oldState [][]interface{}) [][]interface{} {
+  //take the oldstate and update it to new state.
+  var newState [][]interface{}
+  //newState = append(newState, oldState...)
+  for i := 0; i < len(oldState); i++ {
+    var newRow []interface{}
+    newRow = append(newRow, oldState[i]...)
+    newState = append(newState, newRow)
+  }
+
+  // Traverse each cycle
+  n := len(oldState)
+  for i := 0; i < n / 2; i++ {
+    for j := i; j < n - i - 1; j++ {
+      // Swap elements of each cycle
+      // in clockwise direction
+      temp := newState[i][j]
+      newState[i][j] = newState[n - 1 - j][i]
+      newState[n - 1 - j][i] = newState[n - 1 - i][n - 1 - j]
+      newState[n - 1 - i][n - 1 - j] = newState[j][n - 1 - i]
+      newState[j][n - 1 - i] = temp
+    }
+  }
+
+  return newState
+}
+
+func rotate90Invert(oldState [][]interface{}) [][]interface{} {
+  //rotate matrix by 90
+  rotated := rotate90Clockwise(oldState)
+  //we need to reverse each row.
+  var newState [][]interface{}
+  //newState = append(newState, oldState...)
+  for r := 0; r < len(rotated); r++ {
+    var newRow []interface{}
+    for c := len(rotated) - 1; c >= 0; c-- {
+      newRow = append(newRow, rotated[r][c])
+    }
+    newState = append(newState, newRow)
+  }
+  return newState
+}
+
+func (g* Game) GetStateMirrors() []string {
+  var mirrors []string
+  //get the flips, and rotated matrix's to prevent duplicate work.
+  lastState := g.Statelist[len(g.Statelist) - 1]
+  //get reverse string.
+  reverse := reverseString(lastState)
+  mirrors = append(mirrors, reverse)
+  //rotated then mirrored.
+  rotated := rotate90Invert(lastState)
+  rotatedString := stateString(rotated)
+  mirrors = append(mirrors, rotatedString)
+  //inverse that.
+  rotateReverse := reverseString(rotated)
+  mirrors = append(mirrors, rotateReverse)
+  return mirrors
+}
+
+func (g* Game) GenerateSolution() {
+  options := g.GetAvailableMoves()
+
+  //check if there are options on the other color
+  //lastChance := false
+  if len(options) == 0 {
+    //lastChance = true
+    if g.Color == "X" {
+      g.Color = "O"
+    } else {
+      g.Color = "X"
+    }
+    options = g.GetAvailableMoves()
+  }
+
+  if len(options) == 0 {
+    //no options left, this is solution.
+    models.PostSolution(g.Statelist)
+    //results = append(results, gameInfo.Statelist)
+  } else {
+    //get the peers to use
+    peers := models.GetPeers(len(options))
+
+    for i := 0; i < len(options); i++ {
+      //for each option.
+      newState := g.AddMove(options[i])
+      info := models.GetInfo()
+      newState.Ip = info.Ip
+      //fmt.Printf("newState: %+v\n", newState)
+      //http this out to another container.
+      requestBody, err := json.Marshal(&newState)
+      if err != nil {
+        log.Printf("error: %+v", err)
+      }
+
+      response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
+      if err != nil {
+        log.Printf("error: %+v", err)
+      }
+
+      defer response.Body.Close()
+      _, err = ioutil.ReadAll(response.Body)
+      if err != nil {
+        log.Printf("error: %+v", err)
+      }
+    }
+  }
 }
