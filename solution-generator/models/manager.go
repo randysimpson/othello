@@ -39,6 +39,11 @@ type RegisterBody struct {
   Ip string `json:"ip"`
 }
 
+type StateMap struct {
+  Child string `json:"child"`
+  Parent string `json:"parent"`
+}
+
 func GetPeers(count int) []Peer {
   info := GetInfo()
   body := PeerRequest{count, info.Ip}
@@ -83,10 +88,19 @@ func PostSolution(solution [][][]interface{}) {
   }
 }
 
-func PostState(state []string) {
+func PostVisitedState(state []string) {
   info := GetInfo()
 
-  _, err := Post(info.ManagerHost, info.ManagerPort, "/api/v1/state", "application/json", state)
+  _, err := Post(info.ManagerHost, info.ManagerPort, "/api/v1/visited", "application/json", state)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+}
+
+func PostStateMap(statemapping []StateMap) {
+  info := GetInfo()
+
+  _, err := Post(info.ManagerHost, info.ManagerPort, "/api/v1/statemap", "application/json", statemapping)
   if err != nil {
     log.Printf("error: %+v", err)
   }

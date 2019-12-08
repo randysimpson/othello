@@ -44,19 +44,18 @@ func init() {
   if err != nil {
     log.Printf("error: %+v", err)
   }
-
   info.ManagerPort = port
-  info.RedisRO = os.Getenv("REDIS_RO")
+
+  redisRW := os.Getenv("REDIS_RW")
+  redisPassword := os.Getenv("REDIS_PASSWORD")
   redisPort, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
-  info.RedisPort = redisPort
-
   Register()
 
-  SetupPool()
+  SetupPool(redisRW, redisPort, redisPassword)
 }
 
 func GetInfo() Info {

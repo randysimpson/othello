@@ -399,6 +399,83 @@ sudo mkdir /data
 sudo chown 1001:1001 /data
 ```
 
+# Testing manager-controller
+
+1. Peers method.
+
+2. Test the visited post method, should create visited keys with string type:
+
+```
+get "visited:                           OX      XXX                          "
+"1"
+```
+
+curl command:
+
+```
+ubuntu@master-1:~/github/othello$ curl -i -d '["                          XXX      XO                           ","                           OX      XXX                          ","                   X       XX      XO                           ","                           OX      XX       X                   "]' -H "Content-Type: application/json" -X POST http://10.101.123.250:9090/api/v1/state
+HTTP/1.1 201 Created
+Date: Fri, 06 Dec 2019 17:43:24 GMT
+Content-Length: 270
+Content-Type: text/plain; charset=utf-8
+
+["                          XXX      XO                           ","                           OX      XXX                          ","                   X       XX      XO                           ","                           OX      XX       X                   "]
+```
+
+3. Test the statemap post method, should create parent maps sets:
+
+```
+smembers "parentMap:                           OX      XXX                          "
+1) "                           OX      XO                           "
+2) "                          XOX      XO                           "
+```
+
+curl commands:
+
+```
+ubuntu@master-1:~/github/othello$ curl -i -d '[{"child":"                           OX      XXX                          ","parent":"                           OX      XO                           "},{"child":"                   X       XX      XO                           ","parent":"                           OX      XO                           "}]' -H "Content-Type: application/json" -X POST http://10.105.249.243:9090/api/v1/statemap
+HTTP/1.1 201 Created
+Date: Fri, 06 Dec 2019 23:39:23 GMT
+Content-Length: 308
+Content-Type: text/plain; charset=utf-8
+
+[{"child":"                           OX      XXX                          ","parent":"                           OX      XO                           "},{"child":"                   X       XX      XO                           ","parent":"                           OX      XO                           "}]
+ubuntu@master-1:~/github/othello$ curl -i -d '[{"child":"                           OX      XXX                          ","parent":"                          XOX      XO                           "},{"child":"                   X       XX      XO                           ","parent":"                          XOX      XO                           "}]' -H "Content-Type: application/json" -X POST http://10.105.249.243:9090/api/v1/statemap
+HTTP/1.1 201 Created
+Date: Fri, 06 Dec 2019 23:40:58 GMT
+Content-Length: 308
+Content-Type: text/plain; charset=utf-8
+
+[{"child":"                           OX      XXX                          ","parent":"                          XOX      XO                           "},{"child":"                   X       XX      XO                           ","parent":"                          XOX      XO                           "}]
+```
+
+4. Test the solution post method, should create a hm key from redis and a list item:
+
+```
+hgetall "solution:XXXXXXXXXOOXOOXXXOOOXOXXXOXXXXXXXOOXXOXXXXXXXXOXXXOOOOXXXXXXXXXX"
+1) "X"
+2) "47"
+3) "O"
+4) "17"
+```
+
+```
+lrange "x_wins" 0 1
+1) "XXXXXXXXXOOXOOXXXOOOXOXXXOXXXXXXXOOXXOXXXXXXXXOXXXOOOOXXXXXXXXXX"
+```
+
+curl command: 
+
+```
+ubuntu@master-1:~/github/othello$ curl -i -d '[ [ [ "X", "X", "X", "X", "X", "X", "X", "X" ], [ "X", "O", "O", "X", "O", "O", "X", "X" ], [ "X", "O", "O", "O", "X", "O", "X", "X" ], [ "X", "O", "X", "X", "X", "X", "X", "X" ], [ "X", "O", "O", "X", "O", "O", "X", "X" ], [ "X", "X", "X", "X", "X", "O", "O", "X" ], [ "X", "X", "O", "O", "O", "O", "O", "O" ], [ "X", "X", "X", "X", "X", "X", "X", " " ] ], [ [ "X", "X", "X", "X", "X", "X", "X", "X" ], [ "X", "O", "O", "X", "O", "O", "X", "X" ], [ "X", "O", "O", "O", "X", "O", "X", "X" ], [ "X", "O", "X", "X", "X", "X", "X", "X" ], [ "X", "O", "O", "X", "X", "O", "X", "X" ], [ "X", "X", "X", "X", "X", "X", "O", "X" ], [ "X", "X", "O", "O", "O", "O", "X", "X" ], [ "X", "X", "X", "X", "X", "X", "X", "X" ] ]]' -H "Content-Type: application/json" -X POST http://10.105.249.243:9090/api/v1/solution
+HTTP/1.1 201 Created
+Date: Fri, 06 Dec 2019 23:44:40 GMT
+Content-Length: 550
+Content-Type: text/plain; charset=utf-8
+
+[[["X","X","X","X","X","X","X","X"],["X","O","O","X","O","O","X","X"],["X","O","O","O","X","O","X","X"],["X","O","X","X","X","X","X","X"],["X","O","O","X","O","O","X","X"],["X","X","X","X","X","O","O","X"],["X","X","O","O","O","O","O","O"],["X","X","X","X","X","X","X"," "]],[["X","X","X","X","X","X","X","X"],["X","O","O","X","O","O","X","X"],["X","O","O","O","X","O","X","X"],["X","O","X","X","X","X","X","X"],["X","O","O","X","X","O","X","X"],["X","X","X","X","X","X","O","X"],["X","X","O","O","O","O","X","X"],["X","X","X","X","X","X","X","X"]]]
+```
+
 ## License
 
 MIT License

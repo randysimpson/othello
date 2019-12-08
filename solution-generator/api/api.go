@@ -27,9 +27,7 @@ import (
   "encoding/json"
   "github.com/gorilla/mux"
   "io/ioutil"
-  "bytes"
   "solution-generator/game"
-  "solution-generator/models"
 )
 
 func getSolution(w http.ResponseWriter, r *http.Request) {
@@ -41,20 +39,7 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &gameInfo)
 
-  //check if this state has been visited.
-  stateString := gameInfo.GetStateString()
-  isVisted := models.GetVisitedState(stateString)
-
-  //get the other states to avoid duplicate work.
-  states := gameInfo.GetStateMirrors()
-  states = append(states, stateString)
-  //send to mgr that we saw this before.
-  models.PostState(states)
-
-  if(!isVisted) {
-    //var results [][][][]interface{}
-    go gameInfo.GenerateSolution()
-  }
+  go gameInfo.GenerateSolution()
 
   w.WriteHeader(http.StatusOK)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")

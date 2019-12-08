@@ -24,14 +24,14 @@ package models
 import (
   "log"
   "sort"
-  "context"
-  "time"
   "os"
-  "go.mongodb.org/mongo-driver/mongo"
-  "go.mongodb.org/mongo-driver/mongo/options"
-  "fmt"
   "strconv"
 )
+
+type StateMap struct {
+  Child string `json:"child"`
+  Parent string `json:"parent"`
+}
 
 type Peer struct {
   Ip string `json:"ip"`
@@ -45,12 +45,6 @@ type PeerRequest struct {
 
 type RegisterBody struct {
   Ip string `json:"ip"`
-}
-
-type Solution struct {
-  States [][][]interface{} `json:"states"`
-  Score Score `json:"score"`
-  //date
 }
 
 type Score struct {
@@ -91,49 +85,31 @@ func AddPeer(register RegisterBody) {
   peers = append(peers, peer)
 }
 
-var client mongo.Client
-var collection *mongo.Collection
-
 func init() {
-  host := os.Getenv("MONGO_HOST")
-  port := os.Getenv("MONGO_PORT")
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://" + host + ":" + port))
-  if err != nil {
-    log.Printf("error: %+v", err)
-  }
-
-  collection = client.Database("othello").Collection("solutions")
-  
   redisRW := os.Getenv("REDIS_RW")
+  redisPassword := os.Getenv("REDIS_PASSWORD")
   redisPort, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
   if err != nil {
     log.Printf("error: %+v", err)
   }
   
-  SetupPool(redisRW, redisPort)
+  SetupPool(redisRW, redisPort, redisPassword)
 }
 
-func InsertSolution(solution [][][]interface{}) string {
-  score := getScore(solution)
-  insertSolution := Solution{solution, score}
-
-  ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-  res, err := collection.InsertOne(ctx, insertSolution)
-  if err != nil {
-    log.Printf("error: %+v", err)
-  }
-
-  return fmt.Sprintf("%s", res.InsertedID)
+func InsertSolution(solution [][][]interface{}) {
+  lastState := solution[len(solution) - 1]
+  
+  score := getScore(lastState)
+  stateString := getStateString(lastState)
+  
+  AddSolution(stateString, score)
 }
 
-func getScore(solution [][][]interface{}) Score {
+func getScore(solution [][]interface{}) Score {
   score := Score{0, 0}
 
-  lastState := solution[len(solution) - 1]
-
   //count each item.
-  for _, row := range lastState {
+  for _, row := range solution {
 		for _, col := range row {
       if col == "X" {
         score.X ++
@@ -144,4 +120,17 @@ func getScore(solution [][][]interface{}) Score {
 	}
 
   return score
+}
+
+func getStateString(state [][]interface{}) string {
+  stateString := ""
+  
+  for _, row := range state {
+		for _, col := range row {
+      item := col.(string)
+      stateString += item
+    }
+	}
+  
+  return stateString
 }

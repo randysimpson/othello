@@ -24,31 +24,32 @@ package models
 import (
 	"fmt"
 	"log"
-	"github.com/gomodule/redigo/redis"
 	"time"
+	"github.com/gomodule/redigo/redis"
 )
 
 var pool *redis.Pool
 
-func SetupPool(host string, port int) {
+func SetupPool(host string, port int, password string) {
 	url := fmt.Sprintf("%s:%d", host, port)
 	pool = &redis.Pool{
 		MaxIdle:     10,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", url)
+			return redis.Dial("tcp", url, redis.DialPassword(password))
 		},
 	}
 }
 
-func AddStates(states []string) {
+func GetVisitedState(state string) bool {
 	conn := pool.Get()
 	defer conn.Close()
 
 	key := fmt.Sprintf("visited:%s", state)
-	//if it exists increment by 1
-	_, err := conn.Do("SET", key, 1)
+	visited, err := redis.Bool(conn.Do("EXISTS", key))
 	if err != nil {
     log.Printf("error: %+v", err)
   }
+
+	return visited
 }

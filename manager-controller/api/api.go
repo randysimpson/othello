@@ -39,8 +39,7 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &solution)
 
-  id := models.InsertSolution(solution)
-  log.Printf("Created solution with id: %s", id)
+  models.InsertSolution(solution)
 
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -82,19 +81,40 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 func setState(w http.ResponseWriter, r *http.Request) {
   var states []string
-
+  
   reqBody, err := ioutil.ReadAll(r.Body)
   if err != nil {
     log.Printf("error: %+v", err)
   }
-
+  
+  //got to get the state from the payload.
   json.Unmarshal(reqBody, &states)
-
+  
+  //add the state to the model
   models.AddStates(states)
-
+  
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(state)
+  json.NewEncoder(w).Encode(states)
+}
+
+func setParents(w http.ResponseWriter, r *http.Request) {
+  var stateMaping []models.StateMap
+  
+  reqBody, err := ioutil.ReadAll(r.Body)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  //got to get the state map from the payload.
+  json.Unmarshal(reqBody, &stateMaping)
+  
+  //add map to model
+  models.AddStateMaping(stateMaping)
+  
+  w.WriteHeader(http.StatusCreated)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  json.NewEncoder(w).Encode(stateMaping)
 }
 
 func HandleRequests() {
@@ -104,7 +124,8 @@ func HandleRequests() {
   myRouter.HandleFunc("/api/v1/solution", getSolution).Methods("POST")
   myRouter.HandleFunc("/api/v1/peers", getPeers).Methods("POST")
   myRouter.HandleFunc("/api/v1/register", Register).Methods("POST")
-  myRouter.HandleFunc("/api/v1/state", setState).Methods("POST")
+  myRouter.HandleFunc("/api/v1/visited", setState).Methods("POST")
+  myRouter.HandleFunc("/api/v1/statemap", setParents).Methods("POST")
 
   // finally, instead of passing in nil, we want
   // to pass in our newly created router as the second

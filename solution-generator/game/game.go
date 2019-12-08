@@ -22,6 +22,12 @@ SOFTWARE.*/
 package game
 
 import (
+  "net/http"
+  "log"
+  "encoding/json"
+  "io/ioutil"
+  "bytes"
+  "solution-generator/models"
 )
 
 type Game struct {
@@ -389,10 +395,11 @@ func (g* Game) GetStateString() string {
 func stateString(lastState [][]interface{}) string {
   stateString := ""
 
-  //count each item.
+  //postfix each item.
   for _, row := range lastState {
 		for _, col := range row {
-      stateString += col
+      item := col.(string)
+      stateString += item
     }
 	}
 
@@ -402,10 +409,11 @@ func stateString(lastState [][]interface{}) string {
 func reverseString(oldState [][]interface{}) string {
   stateString := ""
 
-  //count each item.
+  //prepend each item.
   for _, row := range oldState {
 		for _, col := range row {
-      stateString = col + stateString
+      item := col.(string)
+      stateString = item + stateString
     }
 	}
 
@@ -489,6 +497,10 @@ func (g* Game) GenerateSolution() {
     options = g.GetAvailableMoves()
   }
 
+  //get parent states
+  parentStates := g.GetStateMirrors()
+  parentStates = append(parentStates, g.GetStateString())
+
   if len(options) == 0 {
     //no options left, this is solution.
     models.PostSolution(g.Statelist)
@@ -502,22 +514,44 @@ func (g* Game) GenerateSolution() {
       newState := g.AddMove(options[i])
       info := models.GetInfo()
       newState.Ip = info.Ip
+
+      //check if this state has been visited.
+      stateString := newState.GetStateString()
+      isVisted := models.GetVisitedState(stateString)
+
+      //get the other states (inverse, rotated) to avoid duplicate work.
+      states := newState.GetStateMirrors()
+      states = append(states, stateString)
+
+      //send to mgr that we saw this before, mark as visited.
+      models.PostVisitedState(states)
+
+      //mark the child parent relationships
+      var stateMapping []models.StateMap
+      for j := 0; j < len(parentStates); j++ {
+        statemap := models.StateMap{states[j], parentStates[j]}
+        stateMapping = append(stateMapping, statemap)
+      }
+      models.PostStateMap(stateMapping)
+
       //fmt.Printf("newState: %+v\n", newState)
-      //http this out to another container.
-      requestBody, err := json.Marshal(&newState)
-      if err != nil {
-        log.Printf("error: %+v", err)
-      }
+      if !isVisted {
+        //http this out to another container.
+        requestBody, err := json.Marshal(&newState)
+        if err != nil {
+          log.Printf("error: %+v", err)
+        }
 
-      response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
-      if err != nil {
-        log.Printf("error: %+v", err)
-      }
+        response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
+        if err != nil {
+          log.Printf("error: %+v", err)
+        }
 
-      defer response.Body.Close()
-      _, err = ioutil.ReadAll(response.Body)
-      if err != nil {
-        log.Printf("error: %+v", err)
+        defer response.Body.Close()
+        _, err = ioutil.ReadAll(response.Body)
+        if err != nil {
+          log.Printf("error: %+v", err)
+        }
       }
     }
   }

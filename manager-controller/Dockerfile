@@ -4,7 +4,6 @@ RUN mkdir manager-controller
 WORKDIR /go/src/manager-controller
 ADD . .
 RUN go get github.com/gorilla/mux
-RUN go get go.mongodb.org/mongo-driver/mongo
 RUN go get github.com/gomodule/redigo/redis
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o main .
 FROM scratch

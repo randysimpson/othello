@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+      version: 3.4.6
+  template:
+    metadata:
+      labels:
+        app: mongo
+        version: 3.4.6
+    spec:
+      volumes:
+      - name: data
+        hostPath:
+          path: /data/mongodb
+      containers:
+      - name: mongo
+        image: mongo@sha256:90b78c44a58d6d927f96baabea3212d8c756017846715b630044aefcabcab2eb
+        command:
+          - mongod
+        ports:
+          - containerPort: 27017
+        volumeMounts:
+        - mountPath: /data/db
+          name: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongosvc
+  labels:
+    name: mongosvc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongo
