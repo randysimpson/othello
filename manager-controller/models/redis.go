@@ -44,13 +44,13 @@ func SetupPool(host string, port int, password string) {
 func AddStates(states []string) {
 	conn := pool.Get()
 	defer conn.Close()
-	
+
 	//setup transaction.
 	err := conn.Send("MULTI")
 	if err != nil {
 		log.Printf("error: %+v", err)
 	}
-	
+
 	for _, state := range states {
 		key := fmt.Sprintf("visited:%s", state)
 		//if it exists increment by 1
@@ -59,7 +59,7 @@ func AddStates(states []string) {
 	    log.Printf("error: %+v", err)
 	  }
 	}
-	
+
 	//execute transaction
 	_, err = conn.Do("EXEC")
 	if err != nil {
@@ -70,22 +70,22 @@ func AddStates(states []string) {
 func AddStateMaping(stateMaping []StateMap) {
 	conn := pool.Get()
 	defer conn.Close()
-	
+
 	//setup transaction.
 	err := conn.Send("MULTI")
 	if err != nil {
 		log.Printf("error: %+v", err)
 	}
-	
+
 	for _, stateMap := range stateMaping {
 		key := fmt.Sprintf("parentMap:%s", stateMap.Child)
-		
+
 		err = conn.Send("SADD", key, stateMap.Parent)
 		if err != nil {
 	    log.Printf("error: %+v", err)
 	  }
 	}
-	
+
 	//execute transaction
 	_, err = conn.Do("EXEC")
 	if err != nil {
@@ -96,20 +96,20 @@ func AddStateMaping(stateMaping []StateMap) {
 func AddSolution(state string, score Score) {
 	conn := pool.Get()
 	defer conn.Close()
-	
+
 	//setup transaction.
 	err := conn.Send("MULTI")
 	if err != nil {
 		log.Printf("error: %+v", err)
 	}
-	
+
 	//set a hash with score
 	key := fmt.Sprintf("solution:%s", state)
 	err = conn.Send("HMSET", key, "X", score.X, "O", score.O)
 	if err != nil {
 		log.Printf("error: %+v", err)
 	}
-	
+
 	result := "o_wins"
 	//set a win/tie/loss list of solutions.
 	if score.X > score.O {
@@ -117,20 +117,84 @@ func AddSolution(state string, score Score) {
 	} else if score.X == score.O {
 		result = "tie"
 	}
-	
+
 	key2 := fmt.Sprintf("%s", result)
 	err = conn.Send("LPUSH", key2, state)
 	if err != nil {
 		log.Printf("error: %+v", err)
 	}
-	
+
 	//execute transaction
 	_, err = conn.Do("EXEC")
 	if err != nil {
 		log.Printf("error: %+v", err)
 	}
-	
+
 	log.Printf("solution ->")
 	log.Printf("state: %+v\n", state)
 	log.Printf("score: %+v\n", score)
+}
+
+func AddPeer(ip string) {
+	conn := pool.Get()
+	defer conn.Close()
+
+	//setup transaction.
+	err := conn.Send("MULTI")
+	if err != nil {
+		log.Printf("error: %+v", err)
+	}
+
+	key := fmt.Sprintf("peer:%s", ip)
+	err = conn.Send("SET", key, 0)
+	if err != nil {
+		log.Printf("error: %+v", err)
+	}
+
+	err = conn.Send("SADD", "peers", ip)
+	if err != nil {
+		log.Printf("error: %+v", err)
+	}
+
+	//execute transaction
+	_, err = conn.Do("EXEC")
+	if err != nil {
+		log.Printf("error: %+v", err)
+	}
+}
+
+func GetPeers() []Peer {
+	var peers []Peer
+	conn := pool.Get()
+	defer conn.Close()
+
+	ips, err := redis.Strings(conn.Do("SMEMBERS", "peers"))
+	if err != nil {
+		log.Printf("error: %+v", err)
+	}
+
+	for _, ip := range ips {
+		key := fmt.Sprintf("peer:%s", ip)
+		count, err := redis.Int(conn.Do("GET", key))
+		if err != nil {
+			log.Printf("error: %+v", err)
+		}
+		peer := Peer{ip, count}
+		peers = append(peers, peer)
+	}
+
+	return peers
+}
+
+func IncrPeers(peers []Peer) {
+	conn := pool.Get()
+	defer conn.Close()
+
+	for _, peer := range peers {
+		key := fmt.Sprintf("peer:%s", peer.Ip)
+		_, err := redis.Int(conn.Do("INCR", key))
+		if err != nil {
+			log.Printf("error: %+v", err)
+		}
+	}
 }

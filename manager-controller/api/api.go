@@ -56,7 +56,7 @@ func getPeers(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &info)
 
-  peers := models.GetPeers(info)
+  peers := models.GetPeersForRequest(info)
 
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -72,7 +72,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &info)
 
-  models.AddPeer(info)
+  models.AddPeer(info.Ip)
 
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -81,18 +81,18 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 func setState(w http.ResponseWriter, r *http.Request) {
   var states []string
-  
+
   reqBody, err := ioutil.ReadAll(r.Body)
   if err != nil {
     log.Printf("error: %+v", err)
   }
-  
+
   //got to get the state from the payload.
   json.Unmarshal(reqBody, &states)
-  
+
   //add the state to the model
   models.AddStates(states)
-  
+
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   json.NewEncoder(w).Encode(states)
@@ -100,18 +100,18 @@ func setState(w http.ResponseWriter, r *http.Request) {
 
 func setParents(w http.ResponseWriter, r *http.Request) {
   var stateMaping []models.StateMap
-  
+
   reqBody, err := ioutil.ReadAll(r.Body)
   if err != nil {
     log.Printf("error: %+v", err)
   }
-  
+
   //got to get the state map from the payload.
   json.Unmarshal(reqBody, &stateMaping)
-  
+
   //add map to model
   models.AddStateMaping(stateMaping)
-  
+
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   json.NewEncoder(w).Encode(stateMaping)

@@ -58,9 +58,8 @@ func (a ByCount) Len() int           { return len(a) }
 func (a ByCount) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByCount) Less(i, j int) bool { return a[i].Count < a[j].Count }
 
-var peers []Peer
-
-func GetPeers(request PeerRequest) []Peer {
+func GetPeersForRequest(request PeerRequest) []Peer {
+  peers := GetPeers()
   //get lowest cound peers without using same IP, increment and then return.
   sort.Sort(ByCount(peers))
 
@@ -76,13 +75,11 @@ func GetPeers(request PeerRequest) []Peer {
       }
     }
   }
-  return rtnList
-}
 
-func AddPeer(register RegisterBody) {
-  peer := Peer{register.Ip, 0}
-  //add the peer
-  peers = append(peers, peer)
+  //increment the list.
+  IncrPeers(rtnList)
+
+  return rtnList
 }
 
 func init() {
@@ -92,16 +89,16 @@ func init() {
   if err != nil {
     log.Printf("error: %+v", err)
   }
-  
+
   SetupPool(redisRW, redisPort, redisPassword)
 }
 
 func InsertSolution(solution [][][]interface{}) {
   lastState := solution[len(solution) - 1]
-  
+
   score := getScore(lastState)
   stateString := getStateString(lastState)
-  
+
   AddSolution(stateString, score)
 }
 
@@ -124,13 +121,13 @@ func getScore(solution [][]interface{}) Score {
 
 func getStateString(state [][]interface{}) string {
   stateString := ""
-  
+
   for _, row := range state {
 		for _, col := range row {
       item := col.(string)
       stateString += item
     }
 	}
-  
+
   return stateString
 }
