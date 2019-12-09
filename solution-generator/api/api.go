@@ -39,7 +39,7 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &gameInfo)
 
-  go gameInfo.GenerateSolution()
+  gameInfo.GenerateSolution()
 
   w.WriteHeader(http.StatusOK)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")

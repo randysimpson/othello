@@ -15,7 +15,7 @@
     "react-transition-group": "^4.3.0",
     "redux": "^4.0.4",
     "redux-thunk": "^2.3.0",
-    "serialize-javascript": ">=2.1.1"
+    "serialize-javascript": "^2.1.2"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -536,23 +536,27 @@ func (g* Game) GenerateSolution() {
 
       //fmt.Printf("newState: %+v\n", newState)
       if !isVisted {
-        //http this out to another container.
-        requestBody, err := json.Marshal(&newState)
-        if err != nil {
-          log.Printf("error: %+v", err)
-        }
-
-        response, err := http.Post("http://" + peers[i].Ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
-        if err != nil {
-          log.Printf("error: %+v", err)
-        }
-
-        defer response.Body.Close()
-        _, err = ioutil.ReadAll(response.Body)
-        if err != nil {
-          log.Printf("error: %+v", err)
-        }
+        go getPeerSolution(newState, peers[i].Ip)
       }
     }
+  }
+}
+
+func getPeerSolution(newState Game, ip string) {
+  //http this out to another container.
+  requestBody, err := json.Marshal(&newState)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+
+  response, err := http.Post("http://" + ip + ":" + "8080/api/v1/solution", "application/json", bytes.NewBuffer(requestBody))
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+
+  defer response.Body.Close()
+  _, err = ioutil.ReadAll(response.Body)
+  if err != nil {
+    log.Printf("error: %+v", err)
   }
 }
