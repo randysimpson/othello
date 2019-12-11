@@ -80,6 +80,22 @@ func Register(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(info)
 }
 
+func getCount(w http.ResponseWriter, r *http.Request) {
+  count := models.GetSolutionQueueCount()
+
+  w.WriteHeader(http.Success)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  json.NewEncoder(w).Encode(count)
+}
+
+func saveSolution(w http.ResponseWriter, r *http.Request) {
+  models.SaveSolutions()
+
+  w.WriteHeader(http.StatusCreated)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  json.NewEncoder(w).Encode("Success")
+}
+
 func HandleRequests() {
   // creates a new instance of a mux router
   myRouter := mux.NewRouter().StrictSlash(true)
@@ -87,6 +103,8 @@ func HandleRequests() {
   myRouter.HandleFunc("/api/v1/solution", getSolution).Methods("POST")
   myRouter.HandleFunc("/api/v1/peers", getPeers).Methods("POST")
   myRouter.HandleFunc("/api/v1/register", Register).Methods("POST")
+  myRouter.HandleFunc("/api/v1/solution-queue", getCount).Methods("GET")
+  myRouter.HandleFunc("/api/v1/solution-queue", saveSolution).Methods("POST")
 
   // finally, instead of passing in nil, we want
   // to pass in our newly created router as the second

@@ -27,9 +27,9 @@ import (
   "context"
   "time"
   "os"
-  "go.mongodb.org/mongo-driver/mongo"
-  "go.mongodb.org/mongo-driver/mongo/options"
+  "database/sql"
   "fmt"
+  _ "github.com/lib/pq"
 )
 
 type Peer struct {
@@ -90,32 +90,111 @@ func AddPeer(register RegisterBody) {
   peers = append(peers, peer)
 }
 
-var client mongo.Client
-var collection *mongo.Collection
+var psqlInfo string
+
+//create a temp storage for solutions, so that we may connect to db and send
+//a large payload at a time, instead of many little connections.
+var solutions []Solution
 
 func init() {
-  host := os.Getenv("MONGO_HOST")
-  port := os.Getenv("MONGO_PORT")
-  ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-  client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://" + host + ":" + port))
+  host := os.Getenv("PG_HOST")
+  port, err := strconv.Atoi(os.Getenv("PG_PORT"))
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  user := os.Getenv("PG_USER")
+  password := os.Getenv("PG_PASSWORD")
+  dbname := os.Getenv("PG_DBNAME")
+  solutionQueue, err := strconv.Atoi(os.Getenv("SOLUTION_QUEUE_LENGTH"))
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
-  collection = client.Database("othello").Collection("solutions")
+  psqlInfo = fmt.Sprintf("host=%s port=%d user=%s "+
+    "password=%s dbname=%s sslmode=disable",
+    host, port, user, password, dbname)
 }
 
-func InsertSolution(solution [][][]interface{}) string {
+func GetSolutionQueueCount() int {
+  return len(solutions)
+}
+
+func InsertSolution(solution [][][]interface{}) {
   score := getScore(solution)
   insertSolution := Solution{solution, score}
 
-  ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-  res, err := collection.InsertOne(ctx, insertSolution)
+  solutions = append(solutions, insertSolution)
+
+  if len(solutions) > solutionQueue {
+    SaveSolutions()
+  }
+}
+
+func SaveSolutions() {
+  db, err := sql.Open("postgres", psqlInfo)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  defer db.Close()
+
+  sqlStatements := getSql()
+
+  err = db.QueryRow(sqlStatements[0])
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
-  return fmt.Sprintf("%s", res.InsertedID)
+  err = db.QueryRow(sqlStatements[1])
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+}
+
+func getSql() []string {
+  sqlUnigramString := "INSERT INTO insert_unigram (insert_state,x_wins,o_wins,ties) VALUES "
+  sqlBigramString := "INSERT INTO insert_bigram (child_insert,parent_insert,x_wins,o_wins,ties) VALUES "
+
+  for i, solution := range(solutions) {
+    sql := getSqlSolution(solution)
+    sqlUnigramString += sql[0]
+    sqlBigramString += sql[1]
+  }
+
+  return [sqlUnigramString, sqlBigramString]
+}
+
+func getSqlSolution(solution Solution) []string {
+  //don't worry about sql injection for this project.
+  x_wins := 0
+  o_wins := 0
+  ties := 0
+  if solution.Score.X == solution.Score.O {
+    ties ++
+  } else if solution.Score.X > solution.Score.O {
+    x_wins ++
+  } else {
+    o_wins ++
+  }
+
+  prevStateString := ""
+
+  for i, state := range(solution.States) {
+    stateString := stateString(state)
+    sqlUnigramString += fmt.Sprintf("('%s',%d,%d,%d)", stateString, x_wins, o_wins, ties)
+    if i < len(solution.States) {
+      sqlUnigramString += ", "
+    }
+
+    if prevStateString != "" {
+      sqlBigramString += fmt.Sprintf("('%s','%s',%d,%d,%d)", prevStateString, stateString, x_wins, o_wins, ties)
+      if i < len(solution.States) {
+        sqlBigramString += ", "
+      }
+    }
+    prevStateString = stateString
+  }
+
+  return [sqlUnigramString, sqlBigramString]
 }
 
 func getScore(solution [][][]interface{}) Score {
