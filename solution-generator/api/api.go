@@ -41,13 +41,10 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &gameInfo)
 
-  //var results [][][][]interface{}
   options := gameInfo.GetAvailableMoves()
 
   //check if there are options on the other color
-  //lastChance := false
   if len(options) == 0 {
-    //lastChance = true
     if gameInfo.Color == "X" {
       gameInfo.Color = "O"
     } else {
@@ -60,7 +57,6 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
   if len(options) == 0 {
     //no options left, this is solution.
     models.PostSolution(gameInfo.Statelist)
-    //results = append(results, gameInfo.Statelist)
   } else {
     //get the peers to use
     peers := models.GetPeers(len(options))
@@ -70,7 +66,7 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
       newState := gameInfo.AddMove(options[i])
       info := models.GetInfo()
       newState.Ip = info.Ip
-      //fmt.Printf("newState: %+v\n", newState)
+
       //http this out to another container.
       requestBody, err := json.Marshal(&newState)
       if err != nil {
@@ -87,13 +83,6 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
       if err != nil {
       	log.Printf("error: %+v", err)
       }
-
-      //var result [][][][]interface{}
-      //json.Unmarshal(body, &result)
-
-      //for j := 0; j < len(result); j++ {
-      //  results = append(results, result[j])
-      //}
     }
   }
 
@@ -102,43 +91,11 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(options)
 }
 
-/*func setPeers(w http.ResponseWriter, r *http.Request) {
-  reqBody, err := ioutil.ReadAll(r.Body)
-  if err != nil {
-    log.Printf("error: %+v", err)
-  }
-
-  peers := models.GetPeers()
-  json.Unmarshal(reqBody, &peers)
-
-  w.WriteHeader(http.StatusCreated)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(peers)
-}
-
-func getPeers(w http.ResponseWriter, r *http.Request) {
-  peers := models.GetPeers()
-
-  w.WriteHeader(http.StatusOK)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(peers)
-}*/
-
-/*func getPeers(w http.ResponseWriter, r *http.Request) {
-  peers := models.GetPeers(2)
-
-  w.WriteHeader(http.StatusOK)
-  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(peers)
-}*/
-
 func HandleRequests() {
   // creates a new instance of a mux router
   myRouter := mux.NewRouter().StrictSlash(true)
 
   myRouter.HandleFunc("/api/v1/solution", getSolution).Methods("POST")
-  //myRouter.HandleFunc("/api/v1/peers", setPeers).Methods("POST")
-  //myRouter.HandleFunc("/api/v1/peers", getPeers)
 
   // finally, instead of passing in nil, we want
   // to pass in our newly created router as the second

@@ -136,3 +136,16 @@ func getScore(solution [][][]interface{}) Score {
 
   return score
 }
+
+func stateString(lastState [][]interface{}) string {
+  stateString := ""
+
+  //postfix each item.
+  for _, row := range lastState {
+    for _, col := range row {
+      item := col.(string)
+      stateString += item
+    }
+  }
+  return stateString
+}
