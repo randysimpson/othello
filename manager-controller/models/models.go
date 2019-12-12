@@ -137,7 +137,12 @@ func SaveSolutions() {
   }
   defer db.Close()
 
-  sqlStatements := getSql()
+  sqlStatements, count := getSql()
+
+  err = db.QueryRow("BEGIN TRANSACTION;")
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
 
   err = db.QueryRow(sqlStatements[0])
   if err != nil {
@@ -148,19 +153,40 @@ func SaveSolutions() {
   if err != nil {
     log.Printf("error: %+v", err)
   }
+
+  err = db.QueryRow(`
+INSERT INTO unigram_count (state_id, x_wins, o_wins, ties)
+SELECT DISTINCT insert_state,
+  (SELECT SUM(i.x_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as ties
+FROM insert_unigram u
+LEFT JOIN unigram_count e
+	on e.state_id = u.insert_state
+WHERE e.state_id is null;`)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+
+  err = db.QueryRow("COMMIT TRANSACTION;")
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
 }
 
-func getSql() []string {
+func getSql() ([]string, int) {
   sqlUnigramString := "INSERT INTO insert_unigram (insert_state,x_wins,o_wins,ties) VALUES "
   sqlBigramString := "INSERT INTO insert_bigram (child_insert,parent_insert,x_wins,o_wins,ties) VALUES "
 
-  for i, solution := range(solutions) {
+  count := 0
+  for _, solution := range(solutions) {
     sql := getSqlSolution(solution)
     sqlUnigramString += sql[0]
     sqlBigramString += sql[1]
+    count ++
   }
 
-  return [sqlUnigramString, sqlBigramString]
+  return [sqlUnigramString, sqlBigramString], count
 }
 
 func getSqlSolution(solution Solution) []string {
