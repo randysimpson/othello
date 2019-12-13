@@ -24,12 +24,11 @@ package models
 import (
   "log"
   "sort"
-  "context"
-  "time"
   "os"
   "database/sql"
   "fmt"
   _ "github.com/lib/pq"
+  "strconv"
 )
 
 type Peer struct {
@@ -95,6 +94,7 @@ var psqlInfo string
 //create a temp storage for solutions, so that we may connect to db and send
 //a large payload at a time, instead of many little connections.
 var solutions []Solution
+var solutionQueue int
 
 func init() {
   host := os.Getenv("PG_HOST")
@@ -105,7 +105,7 @@ func init() {
   user := os.Getenv("PG_USER")
   password := os.Getenv("PG_PASSWORD")
   dbname := os.Getenv("PG_DBNAME")
-  solutionQueue, err := strconv.Atoi(os.Getenv("SOLUTION_QUEUE_LENGTH"))
+  solutionQueue, err = strconv.Atoi(os.Getenv("SOLUTION_QUEUE_LENGTH"))
   if err != nil {
     log.Printf("error: %+v", err)
   }
@@ -139,22 +139,40 @@ func SaveSolutions() {
 
   sqlStatements, count := getSql()
 
-  err = db.QueryRow("BEGIN TRANSACTION;")
+  _, err = db.Exec("BEGIN TRANSACTION;")
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
-  err = db.QueryRow(sqlStatements[0])
+  //insert the data
+  _, err = db.Exec(sqlStatements[0])
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
-  err = db.QueryRow(sqlStatements[1])
+  _, err = db.Exec(sqlStatements[1])
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  //merge it with existing stuff.
+  _, err = db.Exec(`
+UPDATE unigram_count uc
+SET x_wins=ins.x_wins + uc.x_wins, o_wins=ins.o_wins + uc.o_wins, ties=ins.ties + uc.ties
+FROM (SELECT DISTINCT insert_state,
+  (SELECT SUM(i.x_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as ties
+FROM insert_unigram u
+LEFT JOIN unigram_count e
+	on e.state_id = u.insert_state
+WHERE e.state_id is not null) ins
+WHERE uc.state_id = ins.insert_state;`)
   if err != nil {
     log.Printf("error: %+v", err)
   }
 
-  err = db.QueryRow(`
+  _, err = db.Exec(`
 INSERT INTO unigram_count (state_id, x_wins, o_wins, ties)
 SELECT DISTINCT insert_state,
   (SELECT SUM(i.x_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as x_wins,
@@ -167,10 +185,65 @@ WHERE e.state_id is null;`)
   if err != nil {
     log.Printf("error: %+v", err)
   }
-
-  err = db.QueryRow("COMMIT TRANSACTION;")
+  
+  //now bigrams
+  _, err = db.Exec(`
+UPDATE bigram_count bc
+SET x_wins=ins.x_wins + bc.x_wins, o_wins=ins.o_wins + bc.o_wins, ties=ins.ties + bc.ties
+FROM (SELECT DISTINCT child_insert, parent_insert,
+  (SELECT SUM(i.x_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as ties
+FROM insert_bigram u
+LEFT JOIN bigram_count e
+  ON e.child_state = u.child_insert
+  AND e.parent_state = u.parent_insert
+WHERE e.child_state is not null) ins
+WHERE bc.child_state = ins.child_insert
+	AND bc.parent_state = ins.parent_insert;`)
   if err != nil {
     log.Printf("error: %+v", err)
+  }
+  
+  _, err = db.Exec(`
+SELECT DISTINCT child_insert, parent_insert,
+  (SELECT SUM(i.x_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as ties
+FROM insert_bigram u
+LEFT JOIN bigram_count e
+  ON e.child_state = u.child_insert
+  AND e.parent_state = u.parent_insert
+WHERE e.child_state is null;`)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  //now clean up insert tables.
+  _, err = db.Exec(`
+DELETE FROM insert_unigram;
+  `)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  _, err = db.Exec(`
+DELETE FROM insert_bigram;
+  `)
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+
+  _, err = db.Exec("COMMIT TRANSACTION;")
+  if err != nil {
+    log.Printf("error: %+v", err)
+  }
+  
+  //clean up the solution data.
+  if len(solutions) == count {
+    solutions = nil
+  } else {
+    log.Printf("length: %+v, count: %+v", len(solutions), count)
   }
 }
 
@@ -185,8 +258,12 @@ func getSql() ([]string, int) {
     sqlBigramString += sql[1]
     count ++
   }
+  
+  var rtnQueries []string
+  rtnQueries = append(rtnQueries, sqlUnigramString)
+  rtnQueries = append(rtnQueries, sqlBigramString)
 
-  return [sqlUnigramString, sqlBigramString], count
+  return rtnQueries, count
 }
 
 func getSqlSolution(solution Solution) []string {
@@ -203,6 +280,8 @@ func getSqlSolution(solution Solution) []string {
   }
 
   prevStateString := ""
+  sqlUnigramString := ""
+  sqlBigramString := ""
 
   for i, state := range(solution.States) {
     stateString := stateString(state)
@@ -219,8 +298,12 @@ func getSqlSolution(solution Solution) []string {
     }
     prevStateString = stateString
   }
+  
+  var rtnQueries []string
+  rtnQueries = append(rtnQueries, sqlUnigramString)
+  rtnQueries = append(rtnQueries, sqlBigramString)
 
-  return [sqlUnigramString, sqlBigramString]
+  return rtnQueries
 }
 
 func getScore(solution [][][]interface{}) Score {

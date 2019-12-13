@@ -39,12 +39,12 @@ func getSolution(w http.ResponseWriter, r *http.Request) {
 
   json.Unmarshal(reqBody, &solution)
 
-  id := models.InsertSolution(solution)
-  log.Printf("Created solution with id: %s", id)
+  models.InsertSolution(solution)
+  log.Printf("Created solution.")
 
   w.WriteHeader(http.StatusCreated)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  json.NewEncoder(w).Encode(solution)
+  json.NewEncoder(w).Encode("Success")
 }
 
 func getPeers(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func getCount(w http.ResponseWriter, r *http.Request) {
   count := models.GetSolutionQueueCount()
 
-  w.WriteHeader(http.Success)
+  w.WriteHeader(http.StatusOK)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   json.NewEncoder(w).Encode(count)
 }

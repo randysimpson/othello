@@ -30,7 +30,7 @@ CREATE TABLE insert_bigram(
 
 //test data
 INSERT INTO insert_unigram (insert_state,x_wins,o_wins,ties) VALUES 
-('                           XO      OX                           ',1,,0),
+('                           XO      OX                           ',1,0,0),
 ('                           XO      XX      X                    ',1,0,0),
 ('                          OOO      XX      X                    ',1,0,0),
 ('      X                   OOO      XX      X                    ',0,0,1),
@@ -62,6 +62,18 @@ SELECT DISTINCT insert_state,
   (SELECT SUM(i.ties) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as ties
 FROM insert_unigram u
 
+//how to update existing records.....
+UPDATE unigram_count uc
+SET x_wins=ins.x_wins + uc.x_wins, o_wins=ins.o_wins + uc.o_wins, ties=ins.ties + uc.ties
+FROM (SELECT DISTINCT insert_state,
+  (SELECT SUM(i.x_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as ties
+FROM insert_unigram u
+LEFT JOIN unigram_count e
+	on e.state_id = u.insert_state
+WHERE e.state_id is not null) ins
+WHERE uc.state_id = ins.insert_state;
 
 //get the items that are needed to insert into unigrams as brand new.
 SELECT DISTINCT insert_state,
@@ -73,20 +85,35 @@ LEFT JOIN unigram_count e
 	on e.state_id = u.insert_state
 WHERE e.state_id is null;
 
-//how to update existing records.....
-SELECT i.insert_state, i.x_wins + u.x_wins as x_wins, i.o_wins + u.o_wins as o_wins, i.ties + u.ties as ties
-FROM insert_unigram i
-LEFT JOIN unigram_count u
-	on u.state_id = i.insert_state
-WHERE u.state_id is not null;
+//distinct items from bigram insert
+SELECT DISTINCT child_insert, parent_insert,
+  (SELECT SUM(i.x_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as ties
+FROM insert_bigram u
 
+//update items in bigrams
+UPDATE bigram_count bc
+SET x_wins=ins.x_wins + bc.x_wins, o_wins=ins.o_wins + bc.o_wins, ties=ins.ties + bc.ties
+FROM (SELECT DISTINCT child_insert, parent_insert,
+  (SELECT SUM(i.x_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as ties
+FROM insert_bigram u
+LEFT JOIN bigram_count e
+  ON e.child_state = u.child_insert
+  AND e.parent_state = u.parent_insert
+WHERE e.child_state is not null) ins
+WHERE bc.child_state = ins.child_insert
+	AND bc.parent_state = ins.parent_insert;
 
-//UPDATE unigram_count up SET x_wins=(), o_wins=(), ties=()
-WHERE up.insert_state = SELECT DISTINCT insert_state,
-  (SELECT SUM(i.x_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as x_wins,
-  (SELECT SUM(i.o_wins) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as o_wins,
-  (SELECT SUM(i.ties) FROM insert_unigram i WHERE i.insert_state = u.insert_state) as ties
-FROM insert_unigram u
-LEFT JOIN unigram_count e
-	on e.state_id = u.insert_state
-WHERE e.state_id is not null;
+//items needed to insert into bigrams brand new
+SELECT DISTINCT child_insert, parent_insert,
+  (SELECT SUM(i.x_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as x_wins,
+  (SELECT SUM(i.o_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as o_wins,
+  (SELECT SUM(i.ties) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as ties
+FROM insert_bigram u
+LEFT JOIN bigram_count e
+  ON e.child_state = u.child_insert
+  AND e.parent_state = u.parent_insert
+WHERE e.child_state is null;
