@@ -268,8 +268,8 @@ func getSql() ([]string, int) {
   rtnQueries = append(rtnQueries, sqlUnigramString)
   rtnQueries = append(rtnQueries, sqlBigramString)
   
-  log.Printf("sql: %s\n", sqlUnigramString)
-  log.Printf("bi sql: %s\n", sqlBigramString)
+  //log.Printf("sql: %s\n", sqlUnigramString)
+  //log.Printf("bi sql: %s\n", sqlBigramString)
 
   return rtnQueries, count
 }
