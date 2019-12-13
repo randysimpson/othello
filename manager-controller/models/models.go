@@ -206,6 +206,7 @@ WHERE bc.child_state = ins.child_insert
   }
   
   _, err = db.Exec(`
+INSERT INTO bigram_count (child_state, parent_state, x_wins, o_wins, ties)
 SELECT DISTINCT child_insert, parent_insert,
   (SELECT SUM(i.x_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as x_wins,
   (SELECT SUM(i.o_wins) FROM insert_bigram i WHERE i.child_insert = u.child_insert AND i.parent_insert = u.parent_insert) as o_wins,
@@ -259,9 +260,16 @@ func getSql() ([]string, int) {
     count ++
   }
   
+  //remove the last ", "
+  sqlUnigramString = sqlUnigramString[:len(sqlUnigramString) - 2]
+  sqlBigramString = sqlBigramString[:len(sqlBigramString) - 2]
+  
   var rtnQueries []string
   rtnQueries = append(rtnQueries, sqlUnigramString)
   rtnQueries = append(rtnQueries, sqlBigramString)
+  
+  log.Printf("sql: %s\n", sqlUnigramString)
+  log.Printf("bi sql: %s\n", sqlBigramString)
 
   return rtnQueries, count
 }
@@ -283,18 +291,14 @@ func getSqlSolution(solution Solution) []string {
   sqlUnigramString := ""
   sqlBigramString := ""
 
-  for i, state := range(solution.States) {
+  for _, state := range(solution.States) {
     stateString := stateString(state)
     sqlUnigramString += fmt.Sprintf("('%s',%d,%d,%d)", stateString, x_wins, o_wins, ties)
-    if i < len(solution.States) {
-      sqlUnigramString += ", "
-    }
+    sqlUnigramString += ", "
 
     if prevStateString != "" {
       sqlBigramString += fmt.Sprintf("('%s','%s',%d,%d,%d)", prevStateString, stateString, x_wins, o_wins, ties)
-      if i < len(solution.States) {
-        sqlBigramString += ", "
-      }
+      sqlBigramString += ", "
     }
     prevStateString = stateString
   }
