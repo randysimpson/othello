@@ -1,36 +1,23 @@
-# Othello Random Client
+# Othello Custom Client
 
-*GoLang*
+*Python*
 
-This AI client will just choose a random option from the list of available options on a game state received from the body of the REST API endpoint.  This app was created to just introduce a random opponent that has no AI built in.
+This AI client will choose an option from the list of available options that maximizes the final score in the game.  The current game state and color are received from the body of the REST API endpoint.  This app was created to create an opponent that will be a viable opponent to other Othello AI counterparts.
 
 # Installation
 
 ## Manual
 
-To install the client download the repo from github:
+To install the client download the `main.py` file from the github repo:
 
 ```
-git clone https://github.com/randysimpson/othello.git
+wget https://raw.githubusercontent.com/randysimpson/othello/master/othello-ai/main.py
 ```
 
-Move the source files into go/src folder.
+Run the client, and the port exposed is `9000`:
 
 ```
-cd othello
-mv -rf random /go/src/
-```
-
-Build the executable:
-
-```
-go build
-```
-
-Run the client, and the port exposed is `10000`:
-
-```
-./random
+python main.py
 ```
 
 ## Docker
@@ -38,7 +25,7 @@ Run the client, and the port exposed is `10000`:
 To run this from docker issue:
 
 ```sh
-docker run -d -p 10000:10000 randysimpson/othello:1.0-random-latest
+docker run -d -p 9000:9000 randysimpson/othello:1.0-custom-ai-latest
 ```
 
 ## Test
@@ -46,7 +33,7 @@ docker run -d -p 10000:10000 randysimpson/othello:1.0-random-latest
 To test the client:
 
 ```sh
-curl -d '{"id":2,"creationDate":"2019-11-15T23:02:51.857Z","player1":{"name":"rsimpson","color":"X"},"player2":{"ip":"othello-random-ai","port":10000,"color":"O"},"status":{"message":"Waiting for Player 1","date":"2019-11-15T23:02:51.857Z","player":{"name":"rsimpson","color":"X"},"score":{"player1":2,"player2":2},"availableActions":[[3,5],[5,3],[4,2],[2,4]]},"state":[[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," ","X","O"," "," "," "],[" "," "," ","O","X"," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "]],"history":[]}'-H "Content-Type: application/json" -X POST http://localhost:10000/api/v1/ai
+curl -d '{"id":2,"creationDate":"2019-11-15T23:02:51.857Z","player1":{"name":"rsimpson","color":"X"},"player2":{"ip":"othello-custom-ai","port":9000,"color":"O"},"status":{"message":"Waiting for Player 1","date":"2019-11-15T23:02:51.857Z","player":{"name":"rsimpson","color":"X"},"score":{"player1":2,"player2":2},"availableActions":[[3,5],[5,3],[4,2],[2,4]]},"state":[[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," ","X","O"," "," "," "],[" "," "," ","O","X"," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "]],"history":[]}'-H "Content-Type: application/json" -X POST http://localhost:9000/api/v1/ai
 ```
 
 # REST API Endpoints
@@ -61,12 +48,12 @@ curl -d '{"id":2,"creationDate":"2019-11-15T23:02:51.857Z","player1":{"name":"rs
         "creationDate": "2019-11-14T23:25:11.137Z",
         "player1": {
             "ip": "localhost",
-            "port": 10000,
+            "port": 9000,
             "color": "X"
         },
         "player2": {
             "ip": "localhost",
-            "port": 10000,
+            "port": 9000,
             "color": "O"
         },
         "status": {
@@ -74,7 +61,7 @@ curl -d '{"id":2,"creationDate":"2019-11-15T23:02:51.857Z","player1":{"name":"rs
             "date": "2019-11-14T23:25:11.658Z",
             "player": {
                 "ip": "localhost",
-                "port": 10000,
+                "port": 9000,
                 "color": "X"
             },
             "score": {
@@ -108,7 +95,7 @@ curl -d '{"id":2,"creationDate":"2019-11-15T23:02:51.857Z","player1":{"name":"rs
    {
      "player": {
        "ip": "localhost",
-       "port": 10000,
+       "port": 9000,
        "color": "X"
      },
      "location": [2,4]
