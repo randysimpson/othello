@@ -10,6 +10,7 @@ import {
 import LoadingBusy from './components/LoadingBusy';
 import GamePage from './components/GamePage';
 import PlayerForm from './components/PlayerForm';
+import Stats from './components/Stats';
 
 import AlertAppLevel from './components/clarity/AlertAppLevel';
 import SubNav from './components/clarity/SubNav';
@@ -32,6 +33,7 @@ class App extends React.Component {
               <HeaderNav>
                 <NavLink to="/games" exact className="nav-link nav-text">Games</NavLink>
                 <NavLink to="/createPlayer" exact className="nav-link nav-text">Create Player</NavLink>
+                <NavLink to="/stats" exact className="nav-link nav-text">Results/Stats</NavLink>
                 <NavLink to="/info" exact className="nav-link nav-text">Info</NavLink>
               </HeaderNav>
             </header>
@@ -57,6 +59,9 @@ class App extends React.Component {
                     </Route>
                     <Route path="/info">
                       <Info />
+                    </Route>
+                    <Route path="/stats">
+                      <Stats />
                     </Route>
                     <Route path="/createPlayer">
                       <PlayerForm />

@@ -38,7 +38,7 @@ const DataGrid = ({columns, data, total, currentPage, numOnPage, firstPageClick,
           </div>
         </div>
       </div>
-      <clr-dg-footer _ngcontent-clarity-c108="" class="datagrid-footer">
+      {currentPage && <clr-dg-footer _ngcontent-clarity-c108="" class="datagrid-footer">
         <div class="datagrid-footer-description"></div>
         <clr-dg-pagination _ngcontent-clarity-c108="" class="pagination">
           <div class="pagination-size ng-star-inserted">
@@ -89,7 +89,7 @@ const DataGrid = ({columns, data, total, currentPage, numOnPage, firstPageClick,
             </button>
           </div>
         </clr-dg-pagination>
-      </clr-dg-footer>
+      </clr-dg-footer> }
       <div class="datagrid-calculation-table">
         <div class="datagrid-calculation-header"></div>
       </div>
