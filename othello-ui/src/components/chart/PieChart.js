@@ -40,7 +40,8 @@ class PieChart extends Component {
     render() {
         return (
             <div>
-                <canvas ref={node => (this.node = node)} />
+              <h3>{this.state.title}</h3>
+              <canvas ref={node => (this.node = node)} />
             </div>
         );
     }

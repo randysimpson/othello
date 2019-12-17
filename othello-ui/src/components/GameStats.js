@@ -8,7 +8,7 @@ import PieWinLossTie from './PieWinLossTie';
 import './GameStats.css';
 
 const GameStats = (props) => {
-  const { games } = props;
+  const { games, title } = props;
 
   let p1Wins = 0;
   let p2Wins = 0;
@@ -102,8 +102,6 @@ const GameStats = (props) => {
           data: 100
         }]
       }];
-
-  const title = "test"
 
   return (
     <Container>

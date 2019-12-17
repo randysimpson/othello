@@ -51,19 +51,19 @@ class StatsPage extends React.Component {
       <div>
         <h2>Stats</h2>
         <h3>Random vs Random</h3>
-        {randomVrandom && <GameStats games={randomVrandom} />}
+        {randomVrandom && <GameStats games={randomVrandom} title={"Random vs Random"} />}
         <h3>Greedy vs Random</h3>
-        {greedyVrandom && <GameStats games={greedyVrandom} />}
+        {greedyVrandom && <GameStats games={greedyVrandom} title={"Greedy vs Random"} />}
         <h3>Greedy vs Greedy</h3>
-        {greedyVrandom && <GameStats games={greedyVgreedy} />}
+        {greedyVrandom && <GameStats games={greedyVgreedy} title={"Greedy vs Greedy"} />}
         <h3>Custom vs Random</h3>
-        {customVrandom && <GameStats games={customVrandom} />}
+        {customVrandom && <GameStats games={customVrandom} title={"Custom vs Random"} />}
         <h3>Custom vs Greedy</h3>
-        {customVgreedy && <GameStats games={customVgreedy} />}
+        {customVgreedy && <GameStats games={customVgreedy} title={"Custom vs Greedy"} />}
         <h3>Custom vs Custom</h3>
-        {customVcustom && <GameStats games={customVcustom} />}
+        {customVcustom && <GameStats games={customVcustom} title={"Custom vs Custom"} />}
         <h3>Greedy vs Custom</h3>
-        {greedyVcustom && <GameStats games={greedyVcustom} />}
+        {greedyVcustom && <GameStats games={greedyVcustom} title={"Random vs Random"} />}
       </div>
     );
   }
