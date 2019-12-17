@@ -224,6 +224,109 @@ docker manifest create randysimpson/othello:1.0-server-latest randysimpson/othel
 docker manifest push randysimpson/othello:1.0-server-latest
 ```
 
+## HA Proxy
+
+1. Create PV
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    type: local
+  name: data-ha-proxy
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /data
+  persistentVolumeReclaimPolicy: Retain
+```
+
+2. pvc
+
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    component: haproxy
+    tier: control-plane
+  name: data-ha-proxy
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  volumeMode: Filesystem
+  volumeName: data-ha-proxy
+```
+
+2. container
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: haproxy
+    tier: control-plane
+  name: haproxy
+spec:
+  containers:
+  - image: haproxy:1.9.4
+    name: haproxy
+    volumeMounts:
+    - name: haproxy-cfg
+      mountPath: /usr/local/etc/haproxy/haproxy.cfg
+      subPath: haproxy.cfg
+    resources: {}
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /data
+    name: haproxy-cfg
+  nodeSelector:
+    kubernetes.io/hostname: master-2
+status: {}
+```
+
+4. haconfig
+
+```
+global
+defaults
+    timeout client        30s
+    timeout server        30s
+    timeout connect        30s
+
+frontend mgr-api
+    bind            0.0.0.0:9090
+    mode            tcp
+    default_backend        mgr-api
+
+backend mgr-api
+   mode tcp
+   option tcp-check
+   balance roundrobin
+   default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+
+       server mgr-1 10.39.0.1:9090 check
+       server mgr-2 10.40.0.2:9090 check
+       server mgr-3 10.47.0.1:9090 check
+
+listen stats # Define a listen section called "stats"
+  bind 0.0.0.0:9000 # Listen on localhost:9000
+  mode http
+  stats enable  # Enable stats page
+  stats hide-version  # Hide HAProxy version
+  stats realm Haproxy\ Statistics  # Title text for popup window
+  stats uri /  # Stats URI
+```
+
 ## Postgres
 
 1. Create PV
@@ -303,6 +406,14 @@ postgres=# \l
 (3 rows)
 
 postgres=#
+```
+
+## Begin
+
+begin:
+
+```
+curl -d '{"stateList":[[[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," ","O","X"," "," "," "],[" "," "," ","X","O"," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "],[" "," "," "," "," "," "," "," "]]],"color":"X","ip":"10.42.0.1"}' -H "Content-Type: application/json" -X POST http://10.42.0.1:8080/api/v1/solution
 ```
 
 ## License
