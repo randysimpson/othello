@@ -215,13 +215,13 @@ To enable the manifest feature, the experimental CLI options needs to be set in 
 6. Create `latest` edition that will be available for download from hub.docker:
 
 ```
-docker manifest create randysimpson:othello:1.0-server-latest randysimpson/othello:1.0-server-arm randysimpson/othello:1.0-server-amd64
+docker manifest create randysimpson/othello:1.0-server-latest randysimpson/othello:1.0-server-arm randysimpson/othello:1.0-server-amd64
 ```
 
 7. Push to hub.docker:
 
 ```
-docker manifest push randysimpson:othello:1.0-server-latest
+docker manifest push randysimpson/othello:1.0-server-latest
 ```
 
 ## Postgres
