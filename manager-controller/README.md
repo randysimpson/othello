@@ -1,6 +1,6 @@
 # Manager Controller
 
-![Context Diagram](https://github.com/randysimpson/othello/raw/postres/context.PNG "Context Diagram")
+![Context Diagram](https://github.com/randysimpson/othello/raw/master/context.PNG "Context Diagram")
 
 ## Description
 

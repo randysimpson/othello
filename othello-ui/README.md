@@ -1,12 +1,12 @@
 # Othello-UI
 
-The Othello-Ui is a react web UI that will allow for the frontend operation of Othello.  The future version would allow people to create an account and play games against either a computer or another player. 
+The Othello-Ui is a react web UI that will allow for the frontend operation of Othello.  The future version would allow people to create an account and play games against either a computer or another player.
 
 ![Game Info](https://github.com/randysimpson/othello/raw/master/othello-ui/game-info.PNG "Game Info for 102")
 
 ![Game Info - History](https://github.com/randysimpson/othello/raw/master/othello-ui/game-info2.PNG "Game Info for 102 - History")
 
-![Game List](https://github.com/randysimpson/othello/raw/master/othello-ui/game-list.PNG "Game List")
+![Game List](https://github.com/randysimpson/othello/raw/master/othello-ui/games-list.PNG "Game List")
 
 ![Stats](https://github.com/randysimpson/othello/raw/master/othello-ui/stats.PNG "Stats")
 
