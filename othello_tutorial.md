@@ -173,7 +173,7 @@ import '@clr/icons/clr-icons.min.js';
 npm install redux redux-thunk react-redux --save
 ```
 
-# Build
+# Docker Build
 
 1. To build docker image on linux amd64 issue:
 
@@ -224,7 +224,7 @@ docker manifest create randysimpson/othello:1.0-server-latest randysimpson/othel
 docker manifest push randysimpson/othello:1.0-server-latest
 ```
 
-## Postgres
+## Postgres In Kubernetes
 
 1. Create PV
 

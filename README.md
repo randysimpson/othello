@@ -1,6 +1,8 @@
 # Othello
 
-A game that can be used to learn about AI and ML.
+A game that can be used to learn about AI and ML.  This project utilized microservice architecture to allow for the server and clients to communicate with REST API.  The advantage to this is that the opponents can be easily swapped in and out, new ones can be created quickly, and there is no dependency on code language.  These components can be created and scaled easily using Kubernets kubectl command.
+
+![Microservices](https://github.com/randysimpson/othello/raw/master/microservices.PNG "Microservices")
 
 ## Code
 
@@ -14,9 +16,9 @@ A game that can be used to learn about AI and ML.
 
 * (*In Progess*) [Othello UI](https://github.com/randysimpson/othello/tree/master/othello-ui) The frontend for the application written in React.  Allows for stats and listing of current games.  Also a view of the history from a game.
 
-* (*In Progess*) [Manager Controller](https://github.com/randysimpson/othello/tree/master/manager-controller) This component will allow for saving states to a postgres database which can then be used to determine the best possible solution.
+* (*In Progess*) [Manager Controller](https://github.com/randysimpson/othello/tree/master/manager-controller) This component is written in GoLang, and will allow for saving states to a postgres database which can then be used to determine the best possible solution.
 
-* (*In Progess*) [Solution Generator](https://github.com/randysimpson/othello/tree/master/solution-generator) This component will be utilized to generate possible solutions for Othello game play.  These solutions will be sent to REST API of Manager-Controller.
+* (*In Progess*) [Solution Generator](https://github.com/randysimpson/othello/tree/master/solution-generator) This component is written in GoLang, and will be utilized to generate possible solutions for Othello game play.  These solutions will be sent to REST API of Manager-Controller.
 
 ## Deployment
 
