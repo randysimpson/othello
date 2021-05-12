@@ -6,7 +6,7 @@
     "@clr/icons": "^2.4.1",
     "@clr/ui": "^2.4.1",
     "@webcomponents/custom-elements": "^1.4.1",
-    "chart.js": "^2.9.3",
+    "chart.js": "^2.9.4",
     "classnames": "^2.2.6",
     "minimist": "^1.2.5",
     "react": "^16.13.1",
